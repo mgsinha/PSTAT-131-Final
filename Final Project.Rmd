@@ -9,14 +9,108 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## Guidelines
+#### Code
+Uses the tidyverse and tidymodels for fitting
+models, etc. includes comments as necessary.
+Uses code folding so huge blocks of code
+aren't displayed when knitting.
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+#### Narration
+Includes introduction and conclusion sections.
+Good flow of text and narration throughout; at
+least some description/explanation for every
+piece of code/results. Easily readable. Makes
+an effort to explain/make sense to general
+audience. Written like a paper. Divided into
+reasonable sections.
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+#### Exploratory Data Analysis
+Conducts some EDA. Explores outcome
+variable distribution. Assesses missing data
+patterns. Creates at least 3-5 plots or tables to
+explore relationships among variables.
 
-```{r cars}
-summary(cars)
+#### Organization and Structure
+Submits a link to a GitHub repository
+containing your project, with .Rmd and knitted
+.html or .pdf. Includes at least one subfolder
+for data (with subdirectories). Includes
+codebook and data citation.
+
+#### Feature Extraction
+Creates appropriate models. Handles
+categorical predictors reasonably (with
+dummy/one-hot encoding, PCA, etc.). Creates
+interactions if necessary. Justifies any variable
+transformations.
+
+#### Data Splitting
+Divides data into training and test sets with a
+reasonable proportion. Uses stratified
+sampling. Uses cross-validation to fold
+training set. (Ideally, stratified CV with
+repeats.)
+
+#### Model Fitting
+Fits at least 4 model classes (random forest,
+KNN, boosted tree, lasso or ridge regression or
+logistic regression, SVM, neural network).
+Tunes models across resamples. Fits optimal
+tuned model to training and test sets.
+
+## Overview of Data Set
+
+<br> 
+
+We are analyzing the quality of wine based on 11 predictors: fixed acidity, volatile acidity, citric acid, residual sugar, chlorides, free sulfur dioxide, total sulfur dioxide, density, pH, sulfates, alcohol. Quality, in this instance, is defined as an indicator of its craftsmanship and, thus, desirability which can be used, for example, in pricing. Quality does not necessarily indicate if a wine has gone bad. We will use two data sets -- one for white wine and the other for red -- to create two respective machine learning models. There are 4899 observations in the white wine data set and 1600 observations in the red wine data set. 
+>>>>>>> 4107e5d (.)
+
+## Overview of Research Questions 
+
+<br>
+
+We are interested in conducting analysis on both the white and red wine to assess the quality of wine in new wines in production so that they may be accurately priced and marketed.  
+
+## Proposed Project Timeline 
+
+<br>
+
+Week 2: Data cleaning<br>
+Week 3-5: Exploratory Data Analysis<br>
+Week 6-8: Model Building<br>
+Week 9: Conclusion and final touches<br>
+
+## Any questions or concerns
+
+<br>
+
+
+# Loading Data and Packages 
+This project uses data on the white and red wine, which records information about the details of the wine. 
+
+```{r load packages and data}
+# load packages
+library(tidyverse)
+library(lubridate)
+library(tidymodels)
+
+white_train <- read.csv("/Users/safiyaalavi/Desktop/PSTAT 131/131FinalProject/WineDataset/winequality-white.csv", sep = ";")
+
+red_train <- read.csv("/Users/safiyaalavi/Desktop/PSTAT 131/131FinalProject/WineDataset/winequality-red.csv", sep = ";")
+
 ```
 
 
+# Data Cleaning 
+
+# Data Splitting 
+
+=======
+Does the age of the wine also play a role in this? We should also find out if that data we are using is taken from newly produced wine or is taken by measuring nonorganized cases of wine.
+ 
+
+## Data Cleaning
+## EDA
+## Model Fitting
+>>>>>>> 4107e5d (.)
