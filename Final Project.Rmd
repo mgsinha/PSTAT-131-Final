@@ -7,6 +7,12 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(tidymodels)
+library(corrplot)
+library(ggthemes)
+tidymodels_prefer()
 ```
 
 ## Overview of Data Set
@@ -46,26 +52,84 @@ library(lubridate)
 library(tidymodels)
 library(dplyr)
 
-white_train <- read.csv("/Users/safiyaalavi/Desktop/PSTAT 131/131FinalProject/WineDataset/winequality-white.csv", sep = ";")
+white <- read.csv("/Users/mayasinha/Desktop/PSTAT 131/PSTAT-131-Final/Wine Dataset/winequality-white.csv", sep = ";")
 
-red_train <- read.csv("/Users/safiyaalavi/Desktop/PSTAT 131/131FinalProject/WineDataset/winequality-red.csv", sep = ";")
+red <- read.csv("/Users/mayasinha/Desktop/PSTAT 131/PSTAT-131-Final/Wine Dataset/winequality-red.csv", sep = ";")
 
 # Make Column Names Clean 
-colnames(white_train) <- c("Fixed Acidity", "Volatile Acidity","Citric Acid", "Residual Sugar", "Chlorides", "Free Sulfur Dioxide", "Total Sulfur Dioxide", "Density", "pH", "Sulfates", "Alcohol", "Quality")
-colnames(red_train) <- c("Fixed Acidity", "Volatile Acidity","Citric Acid", "Residual Sugar", "Chlorides", "Free Sulfur Dioxide", "Total Sulfur Dioxide", "Density", "pH", "Sulfates", "Alcohol", "Quality")
+colnames(white) <- c("Fixed Acidity", "Volatile Acidity","Citric Acid", "Residual Sugar", "Chlorides", "Free Sulfur Dioxide", "Total Sulfur Dioxide", "Density", "pH", "Sulfates", "Alcohol", "Quality")
+colnames(red) <- c("Fixed Acidity", "Volatile Acidity","Citric Acid", "Residual Sugar", "Chlorides", "Free Sulfur Dioxide", "Total Sulfur Dioxide", "Density", "pH", "Sulfates", "Alcohol", "Quality")
 
 ```
 
 
 # Data Cleaning 
 
-# Data Splitting 
+Our data does not need to be cleaned because it's perfect :D
 
-=======
-Does the age of the wine also play a role in this? We should also find out if that data we are using is taken from newly produced wine or is taken by measuring nonorganized cases of wine.
- 
+# Data Split
 
-## Data Cleaning
-## EDA
+```{r data split}
+white_split <- white %>% 
+  initial_split(prop = 0.8, strata = "quality")
+
+white_train <- training(white_split)
+white_test <- testing(white_split)
+
+red_split <- red %>% 
+  initial_split(prop = 0.8, strata = "quality")
+
+red_train <- training(red_split)
+red_test <- testing(red_split)
+```
+
+## Exploratory Data Analysis
+
+```{r correlation matrix}
+white %>% 
+  select(is.numeric) %>% 
+  cor() %>% 
+  corrplot(type = 'lower', diag = FALSE, 
+           method = 'color', main = 'White Wine Correlation Plot')
+
+red %>% 
+  select(is.numeric) %>% 
+  cor() %>% 
+  corrplot(type = 'lower', diag = FALSE, 
+           method = 'color', main = 'Red Wine Correlation Plot')
+```
+
+```{r combined quality histogram}
+combinedWine <- rbind(white, red)
+quality_df <- table(combinedWine$Quality)
+
+#rename column to Quality
+names(quality_df)[names(quality_df) == "Var1"] <- "Quality"
+
+barplot(quality_df, main = 'Frequency of Quality values', xlab = "Value of Quality", ylab = "Frequency") 
+#quality_plot <- ggplot(data.frame(quality_df), aes(x = Quality, y = Freq, fill = Quality)) + geom_bar(stat = "identity") + ggtitle("Frequency of Quality values") + xlab("Value of Quality") + ylab("Frequency")
+#quality_plot
+```
+
+```{r separated quality histogram}
+ggplot(train, aes(difficulty)) +
+  geom_histogram(bins = 70, color = "white") +
+  labs(
+    title = "Histogram of Difficulty"
+  )
+
+ggplot(train, aes(difficulty)) +
+  geom_histogram(bins = 70, color = "white") +
+  labs(
+    title = "Histogram of Difficulty"
+  )
+```
+
+```{r }
+
+```
+
+
+
 ## Model Fitting
 >>>>>>> 4107e5d (.)
