@@ -71,13 +71,13 @@ Our data does not need to be cleaned because it's perfect :D
 
 ```{r data split}
 white_split <- white %>% 
-  initial_split(prop = 0.8, strata = "quality")
+  initial_split(prop = 0.8, strata = "Quality")
 
 white_train <- training(white_split)
 white_test <- testing(white_split)
 
 red_split <- red %>% 
-  initial_split(prop = 0.8, strata = "quality")
+  initial_split(prop = 0.8, strata = "Quality")
 
 red_train <- training(red_split)
 red_test <- testing(red_split)
@@ -101,27 +101,28 @@ red %>%
 
 ```{r combined quality histogram}
 combinedWine <- rbind(white, red)
-quality_df <- table(combinedWine$Quality)
 
 #rename column to Quality
-names(quality_df)[names(quality_df) == "Var1"] <- "Quality"
 
-barplot(quality_df, main = 'Frequency of Quality values', xlab = "Value of Quality", ylab = "Frequency") 
-#quality_plot <- ggplot(data.frame(quality_df), aes(x = Quality, y = Freq, fill = Quality)) + geom_bar(stat = "identity") + ggtitle("Frequency of Quality values") + xlab("Value of Quality") + ylab("Frequency")
-#quality_plot
+ggplot(combinedWine, aes(Quality)) +
+  geom_histogram(bins = 70, color = "white", binwidth = 1) +
+  labs(
+    title = "Histogram of Quality - Total Wine"
+  )
+t
 ```
 
 ```{r separated quality histogram}
-ggplot(train, aes(difficulty)) +
-  geom_histogram(bins = 70, color = "white") +
+ggplot(white_train, aes(Quality)) +
+  geom_histogram(bins = 70, color = "white", binwidth = 1) +
   labs(
-    title = "Histogram of Difficulty"
+    title = "Histogram of Quality - White Wine"
   )
 
-ggplot(train, aes(difficulty)) +
-  geom_histogram(bins = 70, color = "white") +
+ggplot(red_train, aes(Quality)) +
+  geom_histogram(bins = 70, color = "white", binwidth = 1) +
   labs(
-    title = "Histogram of Difficulty"
+    title = "Histogram of Quality - Red Wine"
   )
 ```
 
