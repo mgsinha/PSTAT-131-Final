@@ -1,30 +1,173 @@
 ---
-title: "MayaFinalProjectScript"
-author: "Safiya Alavi"
-date: "10/25/2022"
+title: "Maya Version - Final Project"
+author: "Safiya Alavi and Maya Sinha"
+date: "2022-10-08"
 output: html_document
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(tidyverse)
+library(tidymodels)
+library(corrplot)
+library(ggthemes)
+tidymodels_prefer()
 ```
 
-## R Markdown
+## Overview of Data Set
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+<br> 
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+We are analyzing the quality of wine based on 11 predictors: fixed acidity, volatile acidity, citric acid, residual sugar, chlorides, free sulfur dioxide, total sulfur dioxide, density, pH, sulfates, alcohol. Quality, in this instance, is defined as an indicator of its craftsmanship and, thus, desirability which can be used, for example, in pricing. Quality does not necessarily indicate if a wine has gone bad. We will use two data sets -- one for white wine and the other for red -- to create two respective machine learning models. There are 4899 observations in the white wine data set and 1600 observations in the red wine data set. 
 
-```{r cars}
-summary(cars)
+
+## Overview of Research Questions 
+
+<br>
+
+We are interested in conducting analysis on both the white and red wine to assess the quality of wine in new wines in production so that they may be accurately priced and marketed.  
+
+## Proposed Project Timeline 
+
+<br>
+
+Week 2: Data cleaning<br>
+Week 3-5: Exploratory Data Analysis<br>
+Week 6-8: Model Building<br>
+Week 9: Conclusion and final touches<br>
+
+## Any questions or concerns
+
+<br>
+
+
+# Loading Data and Packages 
+This project uses data on the white and red wine, which records information about the details of the wine. 
+
+```{r load packages and data}
+# load packages
+library(tidyverse)
+library(lubridate)
+library(tidymodels)
+library(dplyr)
+
+white <- read.csv("Wine Dataset/winequality-white.csv", sep = ";")
+
+red <- read.csv("Wine Dataset/winequality-red.csv", sep = ";")
+
+# Make Column Names Clean 
+colnames(white) <- c("Fixed Acidity", "Volatile Acidity","Citric Acid", "Residual Sugar", "Chlorides", "Free Sulfur Dioxide", "Total Sulfur Dioxide", "Density", "pH", "Sulfates", "Alcohol", "Quality")
+colnames(red) <- c("Fixed Acidity", "Volatile Acidity","Citric Acid", "Residual Sugar", "Chlorides", "Free Sulfur Dioxide", "Total Sulfur Dioxide", "Density", "pH", "Sulfates", "Alcohol", "Quality")
+
+# Change quality to factor
+white$Quality <- factor(white$Quality, levels = c(3,4,5,6,7,8,9))
+red$Quality <- factor(red$Quality, levels = c(3,4,5,6,7,8,9))
 ```
 
-## Including Plots
 
-You can also embed plots, for example:
+# Data Cleaning 
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+Our data does not need to be cleaned because it's perfect :D
+
+# Data Split
+
+```{r data split}
+white_split <- white %>% 
+  initial_split(prop = 0.8, strata = "Quality")
+
+white_train <- training(white_split)
+white_test <- testing(white_split)
+
+red_split <- red %>% 
+  initial_split(prop = 0.8, strata = "Quality")
+
+red_train <- training(red_split)
+red_test <- testing(red_split)
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Exploratory Data Analysis
+
+```{r correlation matrix}
+white %>% 
+  select(is.numeric) %>% 
+  cor() %>% 
+  corrplot(type = 'lower', diag = FALSE, 
+           method = 'color', main = 'White Wine Correlation Plot')
+
+red %>% 
+  select(is.numeric) %>% 
+  cor() %>% 
+  corrplot(type = 'lower', diag = FALSE, 
+           method = 'color', main = 'Red Wine Correlation Plot')
+```
+
+```{r combined quality histogram}
+combinedWine <- rbind(white, red)
+
+
+ggplot(combinedWine, aes(Quality)) +
+  geom_histogram(bins = 70, color = "white", binwidth = 1) +
+  labs(
+    title = "Histogram of Quality - Total Wine"
+  )
+t
+```
+
+```{r separated quality histogram}
+ggplot(white_train, aes(Quality)) +
+  geom_histogram(bins = 70, color = "white", binwidth = 1) +
+  labs(
+    title = "Histogram of Quality - White Wine"
+  )
+
+ggplot(red_train, aes(Quality)) +
+  geom_histogram(bins = 70, color = "white", binwidth = 1) +
+  labs(
+    title = "Histogram of Quality - Red Wine"
+  )
+```
+
+```{r EDA sugar boxplot}
+#all values  
+ggplot(combinedWine, aes(x = `Residual Sugar`, y = Quality)) + 
+  geom_boxplot(aes(fill = Quality)) +
+  labs(x = "Residual Sugar Content", y = "Quality") +
+  geom_point(width = 0.15) +
+  scale_fill_brewer(palette = "YlOrRd")
+
+#zoomed in 
+
+ggplot(combinedWine, aes(x = `Residual Sugar`, y = Quality)) + 
+  geom_boxplot(aes(fill = Quality)) +
+  coord_cartesian( xlim = c(0,18), ylim = NULL, default = FALSE ) +
+  labs(x = "Residual Sugar Content", y = "Quality") +
+  geom_point(width = 0.15) +
+  scale_fill_brewer(palette = "YlOrRd")
+```
+```{r EDA preservatives boxplot}
+#Free Sulfur Dioxide
+ggplot(combinedWine, aes(x = `Free Sulfur Dioxide`, y = Quality)) + 
+  geom_boxplot(aes(fill = Quality)) +
+  labs(x = "Free Sulfur Dioxide", y = "Quality") +
+  geom_point(width = 0.15) +
+  scale_fill_brewer(palette = "YlOrRd")
+
+#Total Sulfur Dioxide
+ggplot(combinedWine, aes(x = `Total Sulfur Dioxide`, y = Quality)) + 
+  geom_boxplot(aes(fill = Quality)) +
+  labs(x = "Total Sulfur Dioxide", y = "Quality") +
+  geom_point(width = 0.15) +
+  scale_fill_brewer(palette = "YlOrRd")
+
+#sulfates
+ggplot(combinedWine, aes(x = `Sulfates`, y = Quality)) + 
+  geom_boxplot(aes(fill = Quality)) +
+  labs(x = "Sulfates", y = "Quality") +
+  geom_point(width = 0.15) +
+  scale_fill_brewer(palette = "YlOrRd")
+
+```
+
+
+## Model Fitting
