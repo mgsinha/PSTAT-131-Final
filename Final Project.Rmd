@@ -63,6 +63,10 @@ colnames(red) <- c("Fixed Acidity", "Volatile Acidity","Citric Acid", "Residual 
 # Change quality to factor
 white$Quality <- factor(white$Quality, levels = c(3,4,5,6,7,8,9))
 red$Quality <- factor(red$Quality, levels = c(3,4,5,6,7,8,9))
+
+# Adding variable type so that we can do analysis on the combinedWine data set easily 
+white$Type <- "White"
+red$Type <- "Red"
 ```
 
 
@@ -104,26 +108,20 @@ red %>%
 
 ```{r combined quality histogram}
 combinedWine <- rbind(white, red)
+ggplot(combinedWine, aes(Quality)) + geom_bar() +labs(title = "Histogram of Quality - Total Wine") + xlab("Quality of Wine") + ylab("Count") #+ scale_fill_manual("pink","pink1","pink2","palevioletred","palevioletred1")
 
-#rename column to Quality
-
-ggplot(combinedWine, aes(Quality)) +
-  geom_histogram(bins = 70, color = "white", binwidth = 1) +
-  labs(
-    title = "Histogram of Quality - Total Wine"
-  )
-t
+# IDK HOW TO CHANGE THE COLORORORORO 
 ```
 
 ```{r separated quality histogram}
 ggplot(white_train, aes(Quality)) +
-  geom_histogram(bins = 70, color = "white", binwidth = 1) +
+  geom_bar() +
   labs(
     title = "Histogram of Quality - White Wine"
   )
 
 ggplot(red_train, aes(Quality)) +
-  geom_histogram(bins = 70, color = "white", binwidth = 1) +
+  geom_bar() +
   labs(
     title = "Histogram of Quality - Red Wine"
   )
