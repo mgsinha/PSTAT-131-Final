@@ -20,7 +20,7 @@ tidymodels_prefer()
 <br> 
 
 We are analyzing the quality of wine based on 11 predictors: fixed acidity, volatile acidity, citric acid, residual sugar, chlorides, free sulfur dioxide, total sulfur dioxide, density, pH, sulfates, alcohol. Quality, in this instance, is defined as an indicator of its craftsmanship and, thus, desirability which can be used, for example, in pricing. Quality does not necessarily indicate if a wine has gone bad. We will use two data sets -- one for white wine and the other for red -- to create two respective machine learning models. There are 4899 observations in the white wine data set and 1600 observations in the red wine data set. 
->>>>>>> 4107e5d (.)
+
 
 ## Overview of Research Questions 
 
@@ -52,9 +52,9 @@ library(lubridate)
 library(tidymodels)
 library(dplyr)
 
-white <- read.csv("/Users/mayasinha/Desktop/PSTAT 131/PSTAT-131-Final/Wine Dataset/winequality-white.csv", sep = ";")
+white <- read.csv("Wine Dataset/winequality-white.csv", sep = ";")
 
-red <- read.csv("/Users/mayasinha/Desktop/PSTAT 131/PSTAT-131-Final/Wine Dataset/winequality-red.csv", sep = ";")
+red <- read.csv("Wine Dataset/winequality-red.csv", sep = ";")
 
 # Make Column Names Clean 
 colnames(white) <- c("Fixed Acidity", "Volatile Acidity","Citric Acid", "Residual Sugar", "Chlorides", "Free Sulfur Dioxide", "Total Sulfur Dioxide", "Density", "pH", "Sulfates", "Alcohol", "Quality")
@@ -71,13 +71,13 @@ Our data does not need to be cleaned because it's perfect :D
 
 ```{r data split}
 white_split <- white %>% 
-  initial_split(prop = 0.8, strata = "quality")
+  initial_split(prop = 0.8, strata = "Quality")
 
 white_train <- training(white_split)
 white_test <- testing(white_split)
 
 red_split <- red %>% 
-  initial_split(prop = 0.8, strata = "quality")
+  initial_split(prop = 0.8, strata = "Quality")
 
 red_train <- training(red_split)
 red_test <- testing(red_split)
