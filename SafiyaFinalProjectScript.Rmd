@@ -7,17 +7,6 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-```
-
----
-title: "Final Project"
-author: "Safiya Alavi and Maya Sinha"
-date: "2022-10-08"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 library(ggplot2)
 library(tidyverse)
 library(tidymodels)
@@ -56,7 +45,7 @@ Week 9: Conclusion and final touches<br>
 # Loading Data and Packages 
 This project uses data on the white and red wine, which records information about the details of the wine. 
 
-```{r load packages and data}
+```{r load packages and data, message = FALSE}
 # load packages
 library(tidyverse)
 library(lubridate)
@@ -74,6 +63,13 @@ colnames(red) <- c("Fixed Acidity", "Volatile Acidity","Citric Acid", "Residual 
 # Change quality to factor
 white$Quality <- factor(white$Quality, levels = c(3,4,5,6,7,8,9))
 red$Quality <- factor(red$Quality, levels = c(3,4,5,6,7,8,9))
+
+# Adding type
+white$Type <- "White"
+red$Type <- "Red"
+
+# data frame of combined wine
+combinedWine <- rbind(white, red)
 ```
 
 
@@ -83,7 +79,7 @@ Our data does not need to be cleaned because it's perfect :D
 
 # Data Split
 
-```{r data split}
+```{r data split, message = FALSE}
 white_split <- white %>% 
   initial_split(prop = 0.8, strata = "Quality")
 
@@ -99,7 +95,7 @@ red_test <- testing(red_split)
 
 ## Exploratory Data Analysis
 
-```{r eda correlation matrix}
+```{r eda correlation matrix, message = FALSE}
 white %>% 
   select(is.numeric) %>% 
   cor() %>% 
@@ -113,48 +109,72 @@ red %>%
            method = 'color', main = 'Red Wine Correlation Plot')
 ```
 
-```{r eda combined quality histogram}
-combinedWine <- rbind(white, red)
 
-ggplot(combinedWine, aes(Quality)) +
-  geom_histogram(bins = 70, color = "white", binwidth = 1) +
-  labs(
-    title = "Histogram of Quality - Total Wine"
-  )
-```
 
-```{r eda separated quality histogram}
-ggplot(white_train, aes(Quality)) +
-  geom_histogram(bins = 70, color = "white", binwidth = 1) +
-  labs(
-    title = "Histogram of Quality - White Wine"
-  )
-
-ggplot(red_train, aes(Quality)) +
-  geom_histogram(bins = 70, color = "white", binwidth = 1) +
-  labs(
-    title = "Histogram of Quality - Red Wine"
-  )
-```
-
-```{r eda boxplot of alcohol versus quality}
-ggplot(white_train, aes(x = Alcohol, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point(width = 0.15) + 
+```{r eda boxplot of alcohol versus quality, message = FALSE}
+ggplot(white_train, aes(x = Alcohol, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point() + 
   labs(title = "White Wine Alcohol Content versus Quality", fill = "Quality")  +
     scale_fill_brewer(palette="BuPu")
 
-ggplot(red_train, aes(x = Alcohol, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point(width = 0.15) + 
+ggplot(red_train, aes(x = Alcohol, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point() + 
   labs(title = "Red Wine Alcohol Content versus Quality", fill = "Quality")  +
     scale_fill_brewer(palette="RdPu")
+
+ggplot(combinedWine, mapping = aes(x = Alcohol, y = Quality, fill = Quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = Alcohol, y = Quality)) + labs(title = "Red and White Wine Alcohol Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ Type, nrow = 1)
+
+ggplot(combinedWine, mapping = aes(x = Alcohol, y = Quality, fill = Quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = Alcohol, y = Quality)) + labs(title = "Red and White Wine Alcohol Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="OrRd") 
 ```
 
-```{r eda boxplot of fixed acidity, volatile acidity, and citric acid versus quality}
-ggplot(white_train, aes(x = `Fixed Acidity`, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point(width = 0.15) + 
-  labs(title = "Alcohol Content versus Quality", fill = "Quality")  +
-    scale_fill_brewer(palette="BuPu")
+```{r eda boxplot of fixed acidity, volatile acidity, and citric acid versus quality, message = FALSE}
 
-ggplot(red_train, aes(x = `Fixed Acidity`, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point(width = 0.15) + 
-  labs(title = "Alcohol Content versus Quality", fill = "Quality")  +
-    scale_fill_brewer(palette="RdPu")
+# FIXED ACIDITY 
+# White
+ggplot(white_train, aes(x = `Fixed Acidity`, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point() + 
+  labs(title = "White Wine Fixed Acidity versus Quality", fill = "Quality")  +
+    scale_fill_brewer(palette="BuPu") + coord_cartesian( xlim = c(0,16), ylim = NULL, default = FALSE )
+
+# Red
+ggplot(red_train, aes(x = `Fixed Acidity`, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point() + 
+  labs(title = "Red Wine Fixed Acidity versus Quality", fill = "Quality")  +
+    scale_fill_brewer(palette="RdPu") + coord_cartesian( xlim = c(0,16), ylim = NULL, default = FALSE )
+
+# Same Page but Seperate
+ggplot(combinedWine, mapping = aes(x = `Fixed Acidity`, y = Quality, fill = Quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = Alcohol, y = Quality)) + labs(title = "Red and White Fixed Acidity Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ Type, nrow = 1) +coord_cartesian( xlim = c(0,16), ylim = NULL, default = FALSE )
+
+# Combined
+ggplot(combinedWine, mapping = aes(x = `Fixed Acidity`, y = Quality, fill = Quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = Alcohol, y = Quality)) + labs(title = "Red and White Fixed Acidity Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd")+coord_cartesian( xlim = c(0,16), ylim = NULL, default = FALSE )
+# ___________________________________________________________________________
+# VOLATILE ACIDITY 
+# White
+ggplot(white_train, aes(x = `Volatile Acidity`, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point() + 
+  labs(title = "White Wine Volatile Acidity versus Quality", fill = "Quality")  + scale_fill_brewer(palette="BuPu")+ coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
+
+# Red
+ggplot(red_train, aes(x = `Volatile Acidity`, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point() + 
+  labs(title = "Red Wine Volatile Acidity versus Quality", fill = "Quality")  +
+    scale_fill_brewer(palette="RdPu") + coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
+
+# Same Page but Seperate
+ggplot(combinedWine, mapping = aes(x = `Volatile Acidity`, y = Quality, fill = Quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = Alcohol, y = Quality)) + labs(title = "Red and White Volatile Acidity Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ Type, nrow = 1) + coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
+
+# Combined
+ggplot(combinedWine, mapping = aes(x = `Volatile Acidity`, y = Quality, fill = Quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = Alcohol, y = Quality)) + labs(title = "Red and White Volatile Acidity Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") +coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
+
+# ___________________________________________________________________________
+# CITRIC ACID 
+# White
+ggplot(white_train, aes(x = `Citric Acid`, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point() + 
+  labs(title = "White Wine Citric Acid Levels versus Quality", fill = "Quality")  + scale_fill_brewer(palette="BuPu")
+
+# Red
+ggplot(red_train, aes(x = `Citric Acid`, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point() + 
+  labs(title = "Red Wine Citric Acid Levels versus Quality", fill = "Quality")  + scale_fill_brewer(palette="RdPu")
+
+# Same Page but Separate (Cut off at 1)
+ggplot(combinedWine, mapping = aes(x = `Citric Acid`, y = Quality, fill = Quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = Alcohol, y = Quality)) + labs(title = "Red and White Citric Acid Levels Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ Type, nrow = 1)+ coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
+
+# Combined
+ggplot(combinedWine, mapping = aes(x = `Citric Acid`, y = Quality, fill = Quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = Alcohol, y = Quality)) + labs(title = "Red and White Citric Acid Levels Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd")+ coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
 ```
 
 
