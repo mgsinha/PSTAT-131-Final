@@ -88,6 +88,10 @@ red_test <- testing(red_split)
 
 ## Exploratory Data Analysis
 
+What sort of factors do winemakers and sommeliers look for in a quality wine? Generally, quality is determined by acidity, dryness, flavor profile or taste, alcohol content, and how well the wine is preserved or how it changes as it is stored. In our exploratory data analysis, we will analyze our predictors based on these five categories. First, acidity levels can be summarized through the pH levels, fixed acidity, volatile acidity, and citric acid content. Dryness is determined by the density. Taste can be broken down into sweetness and saltiness, which are caused by residual sugar and chlorides respectively. We will analyze alcohol content singularly to see its effect on the wine quality. Lastly, sulfurous compounds are what is generally used to preserve wine, so we will analyze free sulfur dioxide, total sulfur dioxide, and sulfates to see if the way a wine is preserved interacts with wine quality in an interesting way.
+
+Our data can be split into two datasets because experts look for different levels of acidity, sugar, etc. for white wine and red wine. Thus, we will have 3 different representations of the data: one for white wine, one for red wine, and one for both. 
+
 ```{r correlation matrix}
 white %>% 
   select(is.numeric) %>% 
@@ -132,41 +136,117 @@ ggplot(red_train, aes(Quality)) +
 #all values  
 ggplot(combinedWine, aes(x = `Residual Sugar`, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
+  ggtitle("Residual Sugar Content for Red and White Wine") +
   labs(x = "Residual Sugar Content", y = "Quality") +
   geom_point(width = 0.15) +
   scale_fill_brewer(palette = "YlOrRd")
 
-#zoomed in 
-
+#all zoomed in 
 ggplot(combinedWine, aes(x = `Residual Sugar`, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
   coord_cartesian( xlim = c(0,18), ylim = NULL, default = FALSE ) +
+  ggtitle("Residual Sugar Content for Red and White Wine") +
   labs(x = "Residual Sugar Content", y = "Quality") +
   geom_point(width = 0.15) +
   scale_fill_brewer(palette = "YlOrRd")
+
+#white 
+ggplot(white_train, aes(x = `Residual Sugar`, y = Quality)) + 
+  geom_boxplot(aes(fill = Quality)) +
+  ggtitle("Residual Sugar Content for White Wine") +
+  labs(x = "Residual Sugar Content", y = "Quality") +
+  geom_point(width = 0.15) +
+  scale_fill_brewer(palette = "BuPu")
+
+#white zoomed in
+ggplot(white_train, aes(x = `Residual Sugar`, y = Quality)) + 
+  geom_boxplot(aes(fill = Quality)) +
+  coord_cartesian( xlim = c(0,20), ylim = NULL, default = FALSE ) +
+  ggtitle("Residual Sugar Content for White Wine") +
+  labs(x = "Residual Sugar Content", y = "Quality") +
+  geom_point(width = 0.15) +
+  scale_fill_brewer(palette = "BuPu")
+
+#red
+ggplot(red_train, aes(x = `Residual Sugar`, y = Quality)) + 
+  geom_boxplot(aes(fill = Quality)) +
+  ggtitle("Residual Sugar Content for Red Wine") +
+  labs(x = "Residual Sugar Content", y = "Quality") +
+  geom_point(width = 0.15) +
+  scale_fill_brewer(palette = "RdPu")
+
+#red zoomed in
+ggplot(red_train, aes(x = `Residual Sugar`, y = Quality)) + 
+  geom_boxplot(aes(fill = Quality)) +
+  coord_cartesian( xlim = c(0,4), ylim = NULL, default = FALSE ) +
+  ggtitle("Residual Sugar Content for Red Wine") +
+  labs(x = "Residual Sugar Content", y = "Quality") +
+  geom_point(width = 0.15) +
+  scale_fill_brewer(palette = "RdPu")
 ```
 ```{r EDA preservatives boxplot}
-#Free Sulfur Dioxide
+#Free Sulfur Dioxide - all values
 ggplot(combinedWine, aes(x = `Free Sulfur Dioxide`, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
-  labs(x = "Free Sulfur Dioxide", y = "Quality") +
+  labs(title = "Free Sulfur Dioxide for Red and White Wine", x = "Free Sulfur Dioxide", y = "Quality") +
   geom_point(width = 0.15) +
   scale_fill_brewer(palette = "YlOrRd")
 
-#Total Sulfur Dioxide
+#FSD - white
+ggplot(white_train, aes(x = `Free Sulfur Dioxide`, y = Quality)) + 
+  geom_boxplot(aes(fill = Quality)) +
+  labs(title = "Free Sulfur Dioxide for White Wine", x = "Free Sulfur Dioxide", y = "Quality") +
+  geom_point(width = 0.15) +
+  scale_fill_brewer(palette = "BuPu")
+
+#FSD - red
+ggplot(red_train, aes(x = `Free Sulfur Dioxide`, y = Quality)) + 
+  geom_boxplot(aes(fill = Quality)) +
+  labs(title = "Free Sulfur Dioxide for Red Wine", x = "Free Sulfur Dioxide", y = "Quality") +
+  geom_point(width = 0.15) +
+  scale_fill_brewer(palette = "RdPu")
+
+#Total Sulfur Dioxide - all values
 ggplot(combinedWine, aes(x = `Total Sulfur Dioxide`, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
-  labs(x = "Total Sulfur Dioxide", y = "Quality") +
+  labs(title = "Total Sulfur Dioxide for Red and White Wine", x = "Total Sulfur Dioxide", y = "Quality") +
   geom_point(width = 0.15) +
   scale_fill_brewer(palette = "YlOrRd")
 
-#sulfates
+#TSD - white
+ggplot(white_train, aes(x = `Total Sulfur Dioxide`, y = Quality)) + 
+  geom_boxplot(aes(fill = Quality)) +
+  labs(title = "Total Sulfur Dioxide for White Wine", x = "Total Sulfur Dioxide", y = "Quality") +
+  geom_point(width = 0.15) +
+  scale_fill_brewer(palette = "BuPu")
+
+#TSD - red
+ggplot(red_train, aes(x = `Total Sulfur Dioxide`, y = Quality)) + 
+  geom_boxplot(aes(fill = Quality)) +
+  labs(title = "Total Sulfur Dioxide for Red Wine", x = "Total Sulfur Dioxide", y = "Quality") +
+  geom_point(width = 0.15) +
+  scale_fill_brewer(palette = "RdPu")
+
+#sulfates - all values
 ggplot(combinedWine, aes(x = `Sulfates`, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
-  labs(x = "Sulfates", y = "Quality") +
+  labs(title = "Sulfates for Red and White Wine", x = "Sulfates", y = "Quality") +
   geom_point(width = 0.15) +
   scale_fill_brewer(palette = "YlOrRd")
 
+#sulfates - white
+ggplot(white_train, aes(x = `Sulfates`, y = Quality)) + 
+  geom_boxplot(aes(fill = Quality)) +
+  labs(title = "Sulfates for White Wine",  x = "Sulfates", y = "Quality") +
+  geom_point(width = 0.15) +
+  scale_fill_brewer(palette = "BuPu")
+
+#sulfates - red
+ggplot(red_train, aes(x = `Sulfates`, y = Quality)) + 
+  geom_boxplot(aes(fill = Quality)) +
+  labs(title = "Sulfates for Red Wine", x = "Sulfates", y = "RdPu") +
+  geom_point(width = 0.15) +
+  scale_fill_brewer(palette = "YlOrRd")
 ```
 
 
