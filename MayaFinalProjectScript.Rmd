@@ -133,7 +133,7 @@ ggplot(red_train, aes(Quality)) +
 ```
 
 ```{r EDA sugar boxplot}
-#all values  
+#all values   #add chlorides too
 ggplot(combinedWine, aes(x = `Residual Sugar`, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
   ggtitle("Residual Sugar Content for Red and White Wine") +
