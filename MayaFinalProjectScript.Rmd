@@ -57,12 +57,19 @@ white <- read.csv("Wine Dataset/winequality-white.csv", sep = ";")
 red <- read.csv("Wine Dataset/winequality-red.csv", sep = ";")
 
 # Make Column Names Clean 
-colnames(white) <- c("Fixed Acidity", "Volatile Acidity","Citric Acid", "Residual Sugar", "Chlorides", "Free Sulfur Dioxide", "Total Sulfur Dioxide", "Density", "pH", "Sulfates", "Alcohol", "Quality")
-colnames(red) <- c("Fixed Acidity", "Volatile Acidity","Citric Acid", "Residual Sugar", "Chlorides", "Free Sulfur Dioxide", "Total Sulfur Dioxide", "Density", "pH", "Sulfates", "Alcohol", "Quality")
+colnames(white) <- c("Fixed_Acidity", "Volatile_Acidity","Citric_Acid", "Residual_Sugar", "Chlorides", "Free_Sulfur_Dioxide", "Total_Sulfur_Dioxide", "Density", "pH", "Sulfates", "Alcohol", "Quality")
+colnames(red) <- c("Fixed_Acidity", "Volatile_Acidity","Citric_Acid", "Residual_Sugar", "Chlorides", "Free_Sulfur_Dioxide", "Total_Sulfur_Dioxide", "Density", "pH", "Sulfates", "Alcohol", "Quality")
 
 # Change quality to factor
 white$Quality <- factor(white$Quality, levels = c(3,4,5,6,7,8,9))
 red$Quality <- factor(red$Quality, levels = c(3,4,5,6,7,8,9))
+
+# Adding type
+white$Type <- "White"
+red$Type <- "Red"
+
+# data frame of combined wine
+combinedWine <- rbind(white, red)
 ```
 
 
@@ -134,7 +141,7 @@ ggplot(red_train, aes(Quality)) +
 
 ```{r EDA sugar boxplot}
 #all values   #add chlorides too
-ggplot(combinedWine, aes(x = `Residual Sugar`, y = Quality)) + 
+ggplot(combinedWine, aes(x = Residual_Sugar, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
   ggtitle("Residual Sugar Content for Red and White Wine") +
   labs(x = "Residual Sugar Content", y = "Quality") +
@@ -142,7 +149,7 @@ ggplot(combinedWine, aes(x = `Residual Sugar`, y = Quality)) +
   scale_fill_brewer(palette = "YlOrRd")
 
 #all zoomed in 
-ggplot(combinedWine, aes(x = `Residual Sugar`, y = Quality)) + 
+ggplot(combinedWine, aes(x = Residual_Sugar, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
   coord_cartesian( xlim = c(0,18), ylim = NULL, default = FALSE ) +
   ggtitle("Residual Sugar Content for Red and White Wine") +
@@ -151,7 +158,7 @@ ggplot(combinedWine, aes(x = `Residual Sugar`, y = Quality)) +
   scale_fill_brewer(palette = "YlOrRd")
 
 #white 
-ggplot(white_train, aes(x = `Residual Sugar`, y = Quality)) + 
+ggplot(white_train, aes(x = Residual_Sugar, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
   ggtitle("Residual Sugar Content for White Wine") +
   labs(x = "Residual Sugar Content", y = "Quality") +
@@ -159,7 +166,7 @@ ggplot(white_train, aes(x = `Residual Sugar`, y = Quality)) +
   scale_fill_brewer(palette = "BuPu")
 
 #white zoomed in
-ggplot(white_train, aes(x = `Residual Sugar`, y = Quality)) + 
+ggplot(white_train, aes(x = Residual_Sugar, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
   coord_cartesian( xlim = c(0,20), ylim = NULL, default = FALSE ) +
   ggtitle("Residual Sugar Content for White Wine") +
@@ -168,7 +175,7 @@ ggplot(white_train, aes(x = `Residual Sugar`, y = Quality)) +
   scale_fill_brewer(palette = "BuPu")
 
 #red
-ggplot(red_train, aes(x = `Residual Sugar`, y = Quality)) + 
+ggplot(red_train, aes(x = Residual_Sugar, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
   ggtitle("Residual Sugar Content for Red Wine") +
   labs(x = "Residual Sugar Content", y = "Quality") +
@@ -176,7 +183,7 @@ ggplot(red_train, aes(x = `Residual Sugar`, y = Quality)) +
   scale_fill_brewer(palette = "RdPu")
 
 #red zoomed in
-ggplot(red_train, aes(x = `Residual Sugar`, y = Quality)) + 
+ggplot(red_train, aes(x = Residual_Sugar, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
   coord_cartesian( xlim = c(0,4), ylim = NULL, default = FALSE ) +
   ggtitle("Residual Sugar Content for Red Wine") +
@@ -186,63 +193,63 @@ ggplot(red_train, aes(x = `Residual Sugar`, y = Quality)) +
 ```
 ```{r EDA preservatives boxplot}
 #Free Sulfur Dioxide - all values
-ggplot(combinedWine, aes(x = `Free Sulfur Dioxide`, y = Quality)) + 
+ggplot(combinedWine, aes(x = Free_Sulfur_Dioxide, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
   labs(title = "Free Sulfur Dioxide for Red and White Wine", x = "Free Sulfur Dioxide", y = "Quality") +
   geom_point(width = 0.15) +
   scale_fill_brewer(palette = "YlOrRd")
 
 #FSD - white
-ggplot(white_train, aes(x = `Free Sulfur Dioxide`, y = Quality)) + 
+ggplot(white_train, aes(x = Free_Sulfur_Dioxide, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
   labs(title = "Free Sulfur Dioxide for White Wine", x = "Free Sulfur Dioxide", y = "Quality") +
   geom_point(width = 0.15) +
   scale_fill_brewer(palette = "BuPu")
 
 #FSD - red
-ggplot(red_train, aes(x = `Free Sulfur Dioxide`, y = Quality)) + 
+ggplot(red_train, aes(x = Free_Sulfur_Dioxide, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
   labs(title = "Free Sulfur Dioxide for Red Wine", x = "Free Sulfur Dioxide", y = "Quality") +
   geom_point(width = 0.15) +
   scale_fill_brewer(palette = "RdPu")
 
 #Total Sulfur Dioxide - all values
-ggplot(combinedWine, aes(x = `Total Sulfur Dioxide`, y = Quality)) + 
+ggplot(combinedWine, aes(x = Total_Sulfur_Dioxide, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
   labs(title = "Total Sulfur Dioxide for Red and White Wine", x = "Total Sulfur Dioxide", y = "Quality") +
   geom_point(width = 0.15) +
   scale_fill_brewer(palette = "YlOrRd")
 
 #TSD - white
-ggplot(white_train, aes(x = `Total Sulfur Dioxide`, y = Quality)) + 
+ggplot(white_train, aes(x = Total_Sulfur_Dioxide, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
   labs(title = "Total Sulfur Dioxide for White Wine", x = "Total Sulfur Dioxide", y = "Quality") +
   geom_point(width = 0.15) +
   scale_fill_brewer(palette = "BuPu")
 
 #TSD - red
-ggplot(red_train, aes(x = `Total Sulfur Dioxide`, y = Quality)) + 
+ggplot(red_train, aes(x = Total_Sulfur_Dioxide, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
   labs(title = "Total Sulfur Dioxide for Red Wine", x = "Total Sulfur Dioxide", y = "Quality") +
   geom_point(width = 0.15) +
   scale_fill_brewer(palette = "RdPu")
 
 #sulfates - all values
-ggplot(combinedWine, aes(x = `Sulfates`, y = Quality)) + 
+ggplot(combinedWine, aes(x = Sulfates, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
   labs(title = "Sulfates for Red and White Wine", x = "Sulfates", y = "Quality") +
   geom_point(width = 0.15) +
   scale_fill_brewer(palette = "YlOrRd")
 
 #sulfates - white
-ggplot(white_train, aes(x = `Sulfates`, y = Quality)) + 
+ggplot(white_train, aes(x = Sulfates, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
   labs(title = "Sulfates for White Wine",  x = "Sulfates", y = "Quality") +
   geom_point(width = 0.15) +
   scale_fill_brewer(palette = "BuPu")
 
 #sulfates - red
-ggplot(red_train, aes(x = `Sulfates`, y = Quality)) + 
+ggplot(red_train, aes(x = Sulfates, y = Quality)) + 
   geom_boxplot(aes(fill = Quality)) +
   labs(title = "Sulfates for Red Wine", x = "Sulfates", y = "RdPu") +
   geom_point(width = 0.15) +
@@ -253,7 +260,17 @@ ggplot(red_train, aes(x = `Sulfates`, y = Quality)) +
 ## Model Fitting
 
 ```{r recipe}
+white_recipe <- recipe(Quality ~ Fixed_Acidity + Volatile_Acidity + Citric_Acid + Residual_Sugar + Chlorides + Free_Sulfur_Dioxide + Total_Sulfur_Dioxide + Density + pH + Sulfates + Alcohol, data = white_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_interact(~ ends_with("Acidity"):Citric_Acid + Fixed_Acidity:Density + Fixed_Acidity:pH + Free_Sulfur_Dioxide:Total_Sulfur_Dioxide)
 
+white_recipe
+
+red_recipe <- recipe(Quality ~ Fixed_Acidity + Volatile_Acidity + Citric_Acid + Residual_Sugar + Chlorides + Free_Sulfur_Dioxide + Total_Sulfur_Dioxide + Density + pH + Sulfates + Alcohol, data = red_train) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_interact(~ ends_with("Acidity"):Citric_Acid + Fixed_Acidity:Density + Fixed_Acidity:pH + Free_Sulfur_Dioxide:Total_Sulfur_Dioxide)
+
+red_recipe
 
 ```
 
@@ -293,7 +310,7 @@ wlda_wkflow <- workflow() %>%
   add_model(wlda_mod) %>% 
   add_recipe(white_recipe)
 
-wlda_fit <- fit(wlda_wkflow, white_train)
+#wlda_fit <- fit(wlda_wkflow, white_train)
 
 # red wine
 rlda_mod <- discrim_linear() %>% 
