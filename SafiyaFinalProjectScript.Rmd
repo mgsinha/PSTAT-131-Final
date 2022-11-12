@@ -12,6 +12,7 @@ library(tidyverse)
 library(tidymodels)
 library(corrplot)
 library(ggthemes)
+library(klaR) # for naive bayes
 tidymodels_prefer()
 ```
 
@@ -179,11 +180,58 @@ ggplot(combinedWine, mapping = aes(x = `Citric_Acid`, y = Quality, fill = Qualit
 
 
 ## Model Fitting
-```{r}
+```{r creating recipe}
 # creating recipe 
 white_recipe <- recipe(Quality ~ Fixed_Acidity + Volatile_Acidity + Citric_Acid + Residual_Sugar + Chlorides + Free_Sulfur_Dioxide + Total_Sulfur_Dioxide + Density + pH + Sulfates + Alcohol, data = white_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~ ends_with("Acidity"):Citric_Acid + Fixed_Acidity:Density + Fixed_Acidity:pH + Free_Sulfur_Dioxide:Total_Sulfur_Dioxide)
 
 red_recipe <- recipe(Quality ~ Fixed_Acidity + Volatile_Acidity + Citric_Acid + Residual_Sugar + Chlorides + Free_Sulfur_Dioxide + Total_Sulfur_Dioxide + Density + pH + Sulfates + Alcohol, data = red_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~ ends_with("Acidity"):Citric_Acid + Fixed_Acidity:Density + Fixed_Acidity:pH + Free_Sulfur_Dioxide:Total_Sulfur_Dioxide)
+```
+
+```{r log reg}
+
+# white wine
+wlog_model <- logistic_reg() %>% 
+  set_engine("glm") %>% set_mode("classification")
+
+wlog_wkflow <- workflow() %>% 
+  add_model(wlog_model) %>% 
+  add_recipe(white_recipe)
+
+wlog_reg_fit <- fit(wlog_wkflow, white_train)
 
 
+# red wine
+rlog_model <- logistic_reg() %>% 
+  set_engine("glm") %>% set_mode("classification")
+
+rlog_wkflow <- workflow() %>% 
+  add_model(rlog_model) %>% 
+  add_recipe(red_recipe)
+
+rlog_reg_fit <- fit(rlog_wkflow, red_train)
+
+wlog_reg_res <- predict(wlog_reg_fit, new_data = white_test %>%  select(-Quality), type = "class" ) 
+
+wlog_reg_res <- bind_cols(wlog_reg_res, white_test %>%  select(Quality)) 
+
+wlog_reg_acc <- augment(wlog_reg_fit, new_data = white_test) %>% accuracy(truth = Quality, estimate = .pred_class)
+
+print(wlog_reg_res)
+print(wlog_reg_acc)
+
+#collect_metrics(wlog_reg_fit)
+#collect_metrics(rlog_reg_fit)
+```
+```{r Naive Bayes model}
+# specifying the naive Bayes model using the mass engine
+wnb_mod <- naive_Bayes() %>% 
+  set_mode("classification") %>% 
+  set_engine("klaR") %>% 
+  set_args(usekernel = FALSE) 
+
+wnb_wkflow <- workflow() %>% 
+  add_model(wnb_mod) %>% 
+  add_recipe(white_recipe)
+
+nb_fit_white <- fit(wnb_wkflow, white_train)
 ```
