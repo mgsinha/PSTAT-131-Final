@@ -115,7 +115,7 @@ ggplot(combinedWine, aes(Quality)) +
   labs(
     title = "Histogram of Quality - Total Wine"
   )
-t
+
 ```
 
 ```{r separated quality histogram}
@@ -251,3 +251,96 @@ ggplot(red_train, aes(x = `Sulfates`, y = Quality)) +
 
 
 ## Model Fitting
+
+```{r recipe}
+
+
+```
+
+
+```{r log reg}
+
+# white wine
+wlog_model <- logistic_reg() %>% 
+  set_engine("glm") %>% set_mode("classification")
+
+wlog_wkflow <- workflow() %>% 
+  add_model(wlog_model) %>% 
+  add_recipe(white_recipe)
+
+wlog_reg_fit <- fit(wlog_wkflow, white_train)
+
+
+# red wine
+rlog_model <- logistic_reg() %>% 
+  set_engine("glm") %>% set_mode("classification")
+
+rlog_wkflow <- workflow() %>% 
+  add_model(rlog_model) %>% 
+  add_recipe(red_recipe)
+
+rlog_reg_fit <- fit(rlog_wkflow, red_train)
+
+```
+
+```{r lda}
+# white wine
+wlda_mod <- discrim_linear() %>% 
+  set_mode("classification") %>% 
+  set_engine("MASS")
+
+wlda_wkflow <- workflow() %>% 
+  add_model(wlda_mod) %>% 
+  add_recipe(white_recipe)
+
+wlda_fit <- fit(wlda_wkflow, white_train)
+
+# red wine
+rlda_mod <- discrim_linear() %>% 
+  set_mode("classification") %>% 
+  set_engine("MASS")
+
+rlda_wkflow <- workflow() %>% 
+  add_model(rlda_mod) %>% 
+  add_recipe(red_recipe)
+
+rlda_fit <- fit(rlda_wkflow, red_train)
+```
+
+```{r qda}
+# white wine
+wqda_mod <- discrim_quad() %>% 
+  set_mode("classification") %>% 
+  set_engine("MASS")
+
+wqda_wkflow <- workflow() %>% 
+  add_model(wqda_mod) %>% 
+  add_recipe(white_recipe)
+
+wqda_fit <- fit(wqda_wkflow, white_train)
+
+# red wine 
+rqda_mod <- discrim_quad() %>% 
+  set_mode("classification") %>% 
+  set_engine("MASS")
+
+rqda_wkflow <- workflow() %>% 
+  add_model(rqda_mod) %>% 
+  add_recipe(red_recipe)
+
+rqda_fit <- fit(rqda_wkflow, red_train)
+```
+
+```{r polynomial reg}
+
+```
+
+```{r accuracy}
+collect_metrics(wlog_reg_fit)
+collect_metrics(rlog_reg_fit)
+collect_metrics(wlda_fit)
+collect_metrics(rlda_fit)
+
+```
+
+
