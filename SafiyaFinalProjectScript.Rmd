@@ -13,6 +13,19 @@ library(tidymodels)
 library(corrplot)
 library(ggthemes)
 library(klaR) # for naive bayes
+library(discrim)
+library(glmnet)
+library(rpart)
+library(randomForest)
+library(xgboost)
+library(ranger)
+library(vip)
+library(lubridate)
+library(dplyr)
+library(ISLR)
+library(rpart.plot)
+library(janitor)
+
 tidymodels_prefer()
 ```
 
@@ -46,28 +59,25 @@ Week 9: Conclusion and final touches<br>
 # Loading Data and Packages 
 This project uses data on the white and red wine, which records information about the details of the wine. 
 
-```{r load packages and data, message = FALSE}
-# load packages
-library(tidyverse)
-library(lubridate)
-library(tidymodels)
-library(dplyr)
+```{r load data, message = FALSE}
 
 white <- read.csv("Wine Dataset/winequality-white.csv", sep = ";")
 
 red <- read.csv("Wine Dataset/winequality-red.csv", sep = ";")
 
 # Make Column Names Clean 
-colnames(white) <- c("Fixed_Acidity", "Volatile_Acidity","Citric_Acid", "Residual_Sugar", "Chlorides", "Free_Sulfur_Dioxide", "Total_Sulfur_Dioxide", "Density", "pH", "Sulfates", "Alcohol", "Quality")
-colnames(red) <- c("Fixed_Acidity", "Volatile_Acidity","Citric_Acid", "Residual_Sugar", "Chlorides", "Free_Sulfur_Dioxide", "Total_Sulfur_Dioxide", "Density", "pH", "Sulfates", "Alcohol", "Quality")
+#colnames(white) <- c("Fixed_Acidity", "Volatile_Acidity","Citric_Acid", "Residual_Sugar", "Chlorides", "Free_Sulfur_Dioxide", "Total_Sulfur_Dioxide", "Density", "pH", "Sulfates", "Alcohol", "Quality")
+#colnames(red) <- c("Fixed_Acidity", "Volatile_Acidity","Citric_Acid", "Residual_Sugar", "Chlorides", "Free_Sulfur_Dioxide", "Total_Sulfur_Dioxide", "Density", "pH", "Sulfates", "Alcohol", "Quality")
+white %>% clean_names()
+red %>% clean_names()
 
 # Change quality to factor
-white$Quality <- factor(white$Quality, levels = c(3,4,5,6,7,8,9))
-red$Quality <- factor(red$Quality, levels = c(3,4,5,6,7,8,9))
+white$quality <- factor(white$quality, levels = c(3,4,5,6,7,8,9))
+red$quality <- factor(red$quality, levels = c(3,4,5,6,7,8,9))
 
 # Adding type
-white$Type <- "White"
-red$Type <- "Red"
+white$type <- "White"
+red$type <- "Red"
 
 # data frame of combined wine
 combinedWine <- rbind(white, red)
@@ -82,16 +92,19 @@ Our data does not need to be cleaned because it's perfect :D
 
 ```{r data split, message = FALSE}
 white_split <- white %>% 
-  initial_split(prop = 0.8, strata = "Quality")
+  initial_split(prop = 0.8, strata = "quality")
 
 white_train <- training(white_split)
 white_test <- testing(white_split)
 
 red_split <- red %>% 
-  initial_split(prop = 0.8, strata = "Quality")
+  initial_split(prop = 0.8, strata = "quality")
 
 red_train <- training(red_split)
 red_test <- testing(red_split)
+
+white_fold <- vfold_cv(white_train, v = 10)
+red_fold <- vfold_cv(red_train, v = 10)
 ```
 
 ## Exploratory Data Analysis
@@ -113,85 +126,88 @@ red %>%
 
 
 ```{r eda boxplot of alcohol versus quality, message = FALSE}
-ggplot(white_train, aes(x = Alcohol, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point() + 
+ggplot(white_train, aes(x = alcohol, y = quality)) + geom_boxplot(aes(fill = quality))+ geom_point() + 
   labs(title = "White Wine Alcohol Content versus Quality", fill = "Quality")  +
     scale_fill_brewer(palette="BuPu")
 
-ggplot(red_train, aes(x = Alcohol, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point() + 
+ggplot(red_train, aes(x = alcohol, y = quality)) + geom_boxplot(aes(fill = quality))+ geom_point() + 
   labs(title = "Red Wine Alcohol Content versus Quality", fill = "Quality")  +
     scale_fill_brewer(palette="RdPu")
 
-ggplot(combinedWine, mapping = aes(x = Alcohol, y = Quality, fill = Quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = Alcohol, y = Quality)) + labs(title = "Red and White Wine Alcohol Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ Type, nrow = 1)
+ggplot(combinedWine, mapping = aes(x = alcohol, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Wine Alcohol Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1)
 
-ggplot(combinedWine, mapping = aes(x = Alcohol, y = Quality, fill = Quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = Alcohol, y = Quality)) + labs(title = "Red and White Wine Alcohol Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="OrRd") 
+ggplot(combinedWine, mapping = aes(x = alcohol, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Wine Alcohol Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="OrRd") 
 ```
 
 ```{r eda boxplot of fixed acidity, volatile acidity, and citric acid versus quality, message = FALSE}
 
 # FIXED ACIDITY 
 # White
-ggplot(white_train, aes(x = Fixed_Acidity, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point() + 
+ggplot(white_train, aes(x = fixed.acidity, y = quality)) + geom_boxplot(aes(fill = quality))+ geom_point() + 
   labs(title = "White Wine Fixed Acidity versus Quality", fill = "Quality")  +
     scale_fill_brewer(palette="BuPu") + coord_cartesian( xlim = c(0,16), ylim = NULL, default = FALSE )
 
 # Red
-ggplot(red_train, aes(x = Fixed_Acidity, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point() + 
+ggplot(red_train, aes(x = fixed.acidity, y = quality)) + geom_boxplot(aes(fill = quality))+ geom_point() + 
   labs(title = "Red Wine Fixed Acidity versus Quality", fill = "Quality")  +
     scale_fill_brewer(palette="RdPu") + coord_cartesian( xlim = c(0,16), ylim = NULL, default = FALSE )
 
 # Same Page but Seperate
-ggplot(combinedWine, mapping = aes(x = `Fixed_Acidity`, y = Quality, fill = Quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = Alcohol, y = Quality)) + labs(title = "Red and White Fixed Acidity Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ Type, nrow = 1) +coord_cartesian( xlim = c(0,16), ylim = NULL, default = FALSE )
+ggplot(combinedWine, mapping = aes(x = `fixed.acidity`, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Fixed Acidity Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1) +coord_cartesian( xlim = c(0,16), ylim = NULL, default = FALSE )
 
 # Combined
-ggplot(combinedWine, mapping = aes(x = `Fixed_Acidity`, y = Quality, fill = Quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = Alcohol, y = Quality)) + labs(title = "Red and White Fixed Acidity Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd")+coord_cartesian( xlim = c(0,16), ylim = NULL, default = FALSE )
+ggplot(combinedWine, mapping = aes(x = `fixed.acidity`, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Fixed Acidity Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd")+coord_cartesian( xlim = c(0,16), ylim = NULL, default = FALSE )
 # ___________________________________________________________________________
 # VOLATILE ACIDITY 
 # White
-ggplot(white_train, aes(x = `Volatile_Acidity`, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point() + 
+ggplot(white_train, aes(x = `volatile.acidity`, y = quality)) + geom_boxplot(aes(fill = quality))+ geom_point() + 
   labs(title = "White Wine Volatile Acidity versus Quality", fill = "Quality")  + scale_fill_brewer(palette="BuPu")+ coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
 
 # Red
-ggplot(red_train, aes(x = `Volatile_Acidity`, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point() + 
+ggplot(red_train, aes(x = `volatile.acidity`, y = quality)) + geom_boxplot(aes(fill = quality))+ geom_point() + 
   labs(title = "Red Wine Volatile_Acidity versus Quality", fill = "Quality")  +
     scale_fill_brewer(palette="RdPu") + coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
 
 # Same Page but Seperate
-ggplot(combinedWine, mapping = aes(x = `Volatile_Acidity`, y = Quality, fill = Quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = Alcohol, y = Quality)) + labs(title = "Red and White Volatile_Acidity Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ Type, nrow = 1) + coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
+ggplot(combinedWine, mapping = aes(x = `volatile.acidity`, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Volatile_Acidity Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1) + coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
 
 # Combined
-ggplot(combinedWine, mapping = aes(x = `Volatile_Acidity`, y = Quality, fill = Quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = Alcohol, y = Quality)) + labs(title = "Red and White Volatile_Acidity Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") +coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
+ggplot(combinedWine, mapping = aes(x = `volatile.acidity`, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Volatile_Acidity Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") +coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
 
 # ___________________________________________________________________________
 # CITRIC ACID 
 # White
-ggplot(white_train, aes(x = `Citric_Acid`, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point() + 
+ggplot(white_train, aes(x = `citric.acid`, y = quality)) + geom_boxplot(aes(fill = quality))+ geom_point() + 
   labs(title = "White Wine Citric Acid Levels versus Quality", fill = "Quality")  + scale_fill_brewer(palette="BuPu")
 
 # Red
-ggplot(red_train, aes(x = `Citric_Acid`, y = Quality)) + geom_boxplot(aes(fill = Quality))+ geom_point() + 
+ggplot(red_train, aes(x = `citric.acid`, y = quality)) + geom_boxplot(aes(fill = quality))+ geom_point() + 
   labs(title = "Red Wine Citric Acid Levels versus Quality", fill = "Quality")  + scale_fill_brewer(palette="RdPu")
 
 # Same Page but Separate (Cut off at 1)
-ggplot(combinedWine, mapping = aes(x = `Citric_Acid`, y = Quality, fill = Quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = Alcohol, y = Quality)) + labs(title = "Red and White Citric Acid Levels Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ Type, nrow = 1)+ coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
+ggplot(combinedWine, mapping = aes(x = `citric.acid`, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Citric Acid Levels Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1)+ coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
 
 # Combined
-ggplot(combinedWine, mapping = aes(x = `Citric_Acid`, y = Quality, fill = Quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = Alcohol, y = Quality)) + labs(title = "Red and White Citric Acid Levels Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd")+ coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
+ggplot(combinedWine, mapping = aes(x = `citric.acid`, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Citric Acid Levels Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd")+ coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
 ```
 
 
 ## Model Fitting
 ```{r creating recipe}
 # creating recipe 
-white_recipe <- recipe(Quality ~ Fixed_Acidity + Volatile_Acidity + Citric_Acid + Residual_Sugar + Chlorides + Free_Sulfur_Dioxide + Total_Sulfur_Dioxide + Density + pH + Sulfates + Alcohol, data = white_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~ ends_with("Acidity"):Citric_Acid + Fixed_Acidity:Density + Fixed_Acidity:pH + Free_Sulfur_Dioxide:Total_Sulfur_Dioxide)
+white_recipe <- recipe(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~volatile.acidity:citric.acid + free.sulfur.dioxide:total.sulfur.dioxide) %>% step_normalize(all_predictors())
 
-red_recipe <- recipe(Quality ~ Fixed_Acidity + Volatile_Acidity + Citric_Acid + Residual_Sugar + Chlorides + Free_Sulfur_Dioxide + Total_Sulfur_Dioxide + Density + pH + Sulfates + Alcohol, data = red_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~ ends_with("Acidity"):Citric_Acid + Fixed_Acidity:Density + Fixed_Acidity:pH + Free_Sulfur_Dioxide:Total_Sulfur_Dioxide)
+red_recipe <- recipe(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~volatile.acidity:citric.acid + free.sulfur.dioxide:total.sulfur.dioxide)%>% step_normalize(all_predictors())
 ```
 
 ```{r log reg}
+glm.fit <- glm(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train, family = binomial)
+summary(glm.fit)
 
 # white wine
 wlog_model <- logistic_reg() %>% 
-  set_engine("glm") %>% set_mode("classification")
+  set_mode("classification")%>% 
+  set_engine("glm")
 
 wlog_wkflow <- workflow() %>% 
   add_model(wlog_model) %>% 
@@ -199,6 +215,14 @@ wlog_wkflow <- workflow() %>%
 
 wlog_reg_fit <- fit(wlog_wkflow, white_train)
 
+wlog_reg_res <- predict(wlog_reg_fit, new_data = white_test %>%  select(-quality), type = "class" ) 
+
+wlog_reg_res <- bind_cols(wlog_reg_res, white_test %>%  select(quality)) 
+
+wlog_reg_acc <- augment(wlog_reg_fit, new_data = white_test) %>% accuracy(truth = quality, estimate = .pred_class)
+
+print(wlog_reg_res)
+print(wlog_reg_acc)
 
 # red wine
 rlog_model <- logistic_reg() %>% 
@@ -210,20 +234,80 @@ rlog_wkflow <- workflow() %>%
 
 rlog_reg_fit <- fit(rlog_wkflow, red_train)
 
-wlog_reg_res <- predict(wlog_reg_fit, new_data = white_test %>%  select(-Quality), type = "class" ) 
+rlog_reg_res <- predict(rlog_reg_fit, new_data = red_test %>%  select(-quality), type = "class" ) 
 
-wlog_reg_res <- bind_cols(wlog_reg_res, white_test %>%  select(Quality)) 
+rlog_reg_res <- bind_cols(rlog_reg_res, red_test %>%  select(quality)) 
 
-wlog_reg_acc <- augment(wlog_reg_fit, new_data = white_test) %>% accuracy(truth = Quality, estimate = .pred_class)
+rlog_reg_acc <- augment(rlog_reg_fit, new_data = red_test) %>% accuracy(truth = quality, estimate = .pred_class)
 
-print(wlog_reg_res)
-print(wlog_reg_acc)
+print(rlog_reg_res)
+print(rlog_reg_acc)
 
 #collect_metrics(wlog_reg_fit)
 #collect_metrics(rlog_reg_fit)
 ```
+
+```{r LDA}
+
+# white lda model
+wlda_model <- discrim_linear() %>% 
+  set_mode("classification") %>% 
+  set_engine("MASS") 
+
+wlda_wkflow <- workflow() %>% 
+  add_model(wlda_model) %>% 
+  add_recipe(white_recipe)
+
+wlda_fit <- fit(wlda_wkflow, white_train)
+
+wlda_res <- predict(wlda_fit, new_data = white_test %>%  select(-quality), type = "class" ) 
+
+wlda_res <- bind_cols(wlda_res, white_test %>%  select(quality)) 
+
+wlda_acc <- augment(wlda_fit, new_data = white_test) %>% accuracy(truth = quality, estimate = .pred_class)
+
+print(wlda_res)
+print(wlda_acc)
+
+# red lda model
+rlda_model <- discrim_linear() %>% 
+  set_mode("classification") %>% 
+  set_engine("MASS") 
+
+rlda_wkflow <- workflow() %>% 
+  add_model(rlda_model) %>% 
+  add_recipe(red_recipe)
+
+rlda_fit <- fit(rlda_wkflow, red_train)
+
+rlda_res <- predict(rlda_fit, new_data = red_test %>%  select(-quality), type = "class" ) 
+
+rlda_res <- bind_cols(rlda_res, red_test %>%  select(quality)) 
+
+rlda_acc <- augment(rlda_fit, new_data = red_test) %>% accuracy(truth = quality, estimate = .pred_class)
+
+print(rlda_res)
+print(rlda_acc)
+```
+
+```{r LDA and QDA k-fold}
+# white lda model using cross validation
+wlda_model_cross <- discrim_linear() %>% 
+  set_mode("classification") %>% 
+  set_engine("MASS") 
+
+wlda_wkflow_cross <- workflow() %>% 
+  add_model(wlda_model_cross) %>% 
+  add_recipe(white_recipe)
+
+wlda_fit_cross <- fit_resamples(wlda_wkflow_cross, white_fold)
+
+collect_metrics(wlda_fit_cross)
+
+```
+
 ```{r Naive Bayes model}
-# specifying the naive Bayes model using the mass engine
+# white
 wnb_mod <- naive_Bayes() %>% 
   set_mode("classification") %>% 
   set_engine("klaR") %>% 
@@ -233,5 +317,48 @@ wnb_wkflow <- workflow() %>%
   add_model(wnb_mod) %>% 
   add_recipe(white_recipe)
 
-nb_fit_white <- fit(wnb_wkflow, white_train)
+wnb_fit_cross <- fit_resamples(wnb_wkflow, white_fold)
+
+collect_metrics(wnb_fit_cross)
+
+# red
+rnb_mod <- naive_Bayes() %>% 
+  set_mode("classification") %>% 
+  set_engine("klaR") %>% 
+  set_args(usekernel = FALSE) 
+
+rnb_wkflow <- workflow() %>% 
+  add_model(rnb_mod) %>% 
+  add_recipe(red_recipe)
+
+rnb_fit_cross <- fit_resamples(rnb_wkflow, red_fold)
+
+collect_metrics(rnb_fit_cross)
+```
+
+```{r decision tree}
+wtree_spec <- decision_tree() %>%
+  set_engine("rpart")
+
+wtree_spec_class <- tree_spec %>%
+  set_mode("classification")
+
+wclass_tree_fit <- wtree_spec_class %>%
+  fit(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train)
+
+wclass_tree_wf<- workflow() %>%
+  add_model(wtree_spec_class %>% 
+              set_args(cost_complexity = tune())) %>% 
+  add_formula(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol)
+
+param_grid <- grid_regular(cost_complexity(range = c(-3,-1)), levels = 10)
+
+tune_res_poke <- tune_grid(
+  class_tree_wf,
+  resamples = pokemon_fold,
+  grid = param_grid,
+  metric = metric_set(roc_auc)
+)
+
+autoplot(tune_res_poke)
 ```
