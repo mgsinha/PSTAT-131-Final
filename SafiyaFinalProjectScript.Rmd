@@ -202,30 +202,32 @@ scaled_red = as.data.frame(scale(select(red, c(-quality,-type))))
 
 # WHITE
 # scaled white residual sugar versus density 
-ggplot(scaled_white, aes(x = residual.sugar, y = density)) + geom_point()+scale_x_continuous(name = "Residual Sugar") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)
+wrsd = ggplot(scaled_white, aes(x = residual.sugar, y = density)) + geom_point()+scale_x_continuous(name = "Residual Sugar") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)+ ggtitle(" Residual Sugar Versus Density") + theme(plot.title = element_text(size = 5))
 # scaled white alcohol versus density 
-ggplot(scaled_white, aes(x = alcohol, y = density)) + geom_point()+scale_x_continuous(name = "Alcohol") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)
+wad = ggplot(scaled_white, aes(x = alcohol, y = density)) + geom_point()+scale_x_continuous(name = "Alcohol") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Alcohol Versus Density") + theme(plot.title = element_text(size = 5))
 
 # scaled white free sulfur dioxide versus total sulfur dioxide
-ggplot(scaled_white, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxide") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)
+wfsdtsd = ggplot(scaled_white, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxide") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Free Sulfur Versus Total Sulfur Dioxide") + theme(plot.title = element_text(size = 5))
 
-
+ggarrange(wrsd, wad, wfsdtsd + rremove("x.text"), ncol = 3, nrow = 1) %>% annotate_figure(top = text_grob("White Wine Scaled"))
 # RED
 
 # scaled red volatile acidity versus citric acid
-ggplot(scaled_red, aes(x = volatile.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Volatile Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)
+rvaca = ggplot(scaled_red, aes(x = volatile.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Volatile Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)
 
 # scaled red fixed acidity versus citric acid 
-ggplot(scaled_red, aes(x = fixed.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)
+rfaca = ggplot(scaled_red, aes(x = fixed.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)
 
 # scaled red fixed acidity versus pH
-ggplot(scaled_red, aes(x = fixed.acidity, y = pH)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "pH") + geom_smooth(method = "lm", se = FALSE)
+rfap = ggplot(scaled_red, aes(x = fixed.acidity, y = pH)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "pH") + geom_smooth(method = "lm", se = FALSE)
 
 # scaled red fixed acidity versus density
-ggplot(scaled_red, aes(x = fixed.acidity, y = density())) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)
+rfad = ggplot(scaled_red, aes(x = fixed.acidity, y = density())) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)
 
 # scaled red free sulfur dioxide versus total sulfur dioxide
-ggplot(scaled_red, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxid") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)
+fsdtsd = ggplot(scaled_red, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxid") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)
+
+
 
 ```
 
