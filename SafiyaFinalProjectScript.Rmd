@@ -213,21 +213,21 @@ ggarrange(wrsd, wad, wfsdtsd + rremove("x.text"), ncol = 3, nrow = 1) %>% annota
 # RED
 
 # scaled red volatile acidity versus citric acid
-rvaca = ggplot(scaled_red, aes(x = volatile.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Volatile Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)
+rvaca = ggplot(scaled_red, aes(x = volatile.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Volatile Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Volatile Acidity Versus Citric Acid") + theme(plot.title = element_text(size = 5))
 
 # scaled red fixed acidity versus citric acid 
-rfaca = ggplot(scaled_red, aes(x = fixed.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)
+rfaca = ggplot(scaled_red, aes(x = fixed.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus Citric Acid") + theme(plot.title = element_text(size = 5))
 
 # scaled red fixed acidity versus pH
-rfap = ggplot(scaled_red, aes(x = fixed.acidity, y = pH)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "pH") + geom_smooth(method = "lm", se = FALSE)
+rfap = ggplot(scaled_red, aes(x = fixed.acidity, y = pH)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "pH") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus pH") + theme(plot.title = element_text(size = 5))
 
 # scaled red fixed acidity versus density
-rfad = ggplot(scaled_red, aes(x = fixed.acidity, y = density())) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)
+rfad = ggplot(scaled_red, aes(x = fixed.acidity, y = density)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus Density") + theme(plot.title = element_text(size = 5))
 
 # scaled red free sulfur dioxide versus total sulfur dioxide
-fsdtsd = ggplot(scaled_red, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxid") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)
+fsdtsd = ggplot(scaled_red, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxide") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Free Sulfur Dioxide Versus Total Sulfur Dioxide") + theme(plot.title = element_text(size = 5))
 
-
+ggarrange(rvaca, rfaca, rfap, rfad, fsdtsd, ncol = 3, nrow = 2) %>% annotate_figure(top = text_grob("Red Wine Scaled"))
 
 ```
 
