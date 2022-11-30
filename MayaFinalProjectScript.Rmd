@@ -268,17 +268,9 @@ ggplot(red_train, aes(x = sulphates, y = quality)) +
 ## Model Fitting
 
 ```{r recipe}
-white_recipe <- recipe(Quality ~ Fixed_Acidity + Volatile_Acidity + Citric_Acid + Residual_Sugar + Chlorides + Free_Sulfur_Dioxide + Total_Sulfur_Dioxide + Density + pH + Sulfates + Alcohol, data = white_train) %>% 
-  step_dummy(all_nominal_predictors()) %>% 
-  step_interact(~ ends_with("Acidity"):Citric_Acid + Fixed_Acidity:Density + Fixed_Acidity:pH + Free_Sulfur_Dioxide:Total_Sulfur_Dioxide)
+white_recipe <- recipe(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~density:residual.sugar + density:alcohol) %>% step_normalize(all_predictors())
 
-white_recipe
-
-red_recipe <- recipe(Quality ~ Fixed_Acidity + Volatile_Acidity + Citric_Acid + Residual_Sugar + Chlorides + Free_Sulfur_Dioxide + Total_Sulfur_Dioxide + Density + pH + Sulfates + Alcohol, data = red_train) %>% 
-  step_dummy(all_nominal_predictors()) %>% 
-  step_interact(~ ends_with("Acidity"):Citric_Acid + Fixed_Acidity:Density + Fixed_Acidity:pH + Free_Sulfur_Dioxide:Total_Sulfur_Dioxide)
-
-red_recipe
+red_recipe <- recipe(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~citric.acid:fixed.acidity + density:fixed.acidity + ph:fixed.acidity + citric.acid:volatile.acidity + free.sulfur.dioxide:total.sulfur.dioxide)%>% step_normalize(all_predictors())
 
 ```
 
