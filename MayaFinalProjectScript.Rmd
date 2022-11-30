@@ -267,6 +267,8 @@ ggplot(red_train, aes(x = sulphates, y = quality)) +
 
 ## Model Fitting
 
+Based on the correlations between predictors, we interacted those terms in our recipe. The terms we interact are different for white wine and red wine. We also excluded fixed acidity from our recipe because in the boxplot, we can see that the amount of fixed acidity has little effect on the quality of the wine for both white and red wine. 
+
 ```{r recipe}
 white_recipe <- recipe(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~density:residual.sugar + density:alcohol) %>% step_normalize(all_predictors())
 
