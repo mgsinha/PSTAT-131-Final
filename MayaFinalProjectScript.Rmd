@@ -166,7 +166,7 @@ ggplot(combinedWine, aes(x = residual.sugar, y = quality)) +
   scale_fill_brewer(palette = "YlOrRd")
 
 #white 
-ggplot(white_train, aes(x = residual.sugar, y = quality)) + 
+ggplot(white, aes(x = residual.sugar, y = quality)) + 
   geom_boxplot(aes(fill = quality)) +
   ggtitle("Residual Sugar Content for White Wine") +
   labs(x = "Residual Sugar Content", y = "Quality") +
@@ -174,7 +174,7 @@ ggplot(white_train, aes(x = residual.sugar, y = quality)) +
   scale_fill_brewer(palette = "BuPu")
 
 #white zoomed in
-ggplot(white_train, aes(x = residual.sugar, y = quality)) + 
+ggplot(white, aes(x = residual.sugar, y = quality)) + 
   geom_boxplot(aes(fill = quality)) +
   coord_cartesian( xlim = c(0,20), ylim = NULL, default = FALSE ) +
   ggtitle("Residual Sugar Content for White Wine") +
@@ -183,7 +183,7 @@ ggplot(white_train, aes(x = residual.sugar, y = quality)) +
   scale_fill_brewer(palette = "BuPu")
 
 #red
-ggplot(red_train, aes(x = residual.sugar, y = quality)) + 
+ggplot(red, aes(x = residual.sugar, y = quality)) + 
   geom_boxplot(aes(fill = quality)) +
   ggtitle("Residual Sugar Content for Red Wine") +
   labs(x = "Residual Sugar Content", y = "Quality") +
@@ -191,7 +191,7 @@ ggplot(red_train, aes(x = residual.sugar, y = quality)) +
   scale_fill_brewer(palette = "RdPu")
 
 #red zoomed in
-ggplot(red_train, aes(x = residual.sugar, y = quality)) + 
+ggplot(red, aes(x = residual.sugar, y = quality)) + 
   geom_boxplot(aes(fill = quality)) +
   coord_cartesian( xlim = c(0,4), ylim = NULL, default = FALSE ) +
   ggtitle("Residual Sugar Content for Red Wine") +
@@ -208,14 +208,14 @@ ggplot(combinedWine, aes(x = free.sulfur.dioxide, y = quality)) +
   scale_fill_brewer(palette = "YlOrRd")
 
 #FSD - white
-ggplot(white_train, aes(x = free.sulfur.dioxide, y = quality)) + 
+ggplot(white, aes(x = free.sulfur.dioxide, y = quality)) + 
   geom_boxplot(aes(fill = quality)) +
   labs(title = "Free Sulfur Dioxide for White Wine", x = "Free Sulfur Dioxide", y = "Quality") +
   geom_point(width = 0.15) +
   scale_fill_brewer(palette = "BuPu")
 
 #FSD - red
-ggplot(red_train[-free.sulfur.dioxide > 50], aes(x = free.sulfur.dioxide, y = quality)) + 
+ggplot(red, aes(x = free.sulfur.dioxide, y = quality)) + 
   geom_boxplot(aes(fill = quality)) +
   labs(title = "Free Sulfur Dioxide for Red Wine", x = "Free Sulfur Dioxide", y = "Quality") +
   geom_point(width = 0.15) +
@@ -229,14 +229,14 @@ ggplot(combinedWine, aes(x = total.sulfur.dioxide, y = quality)) +
   scale_fill_brewer(palette = "YlOrRd")
 
 #TSD - white
-ggplot(white_train, aes(x = total.sulfur.dioxide, y = quality)) + 
+ggplot(white, aes(x = total.sulfur.dioxide, y = quality)) + 
   geom_boxplot(aes(fill = quality)) +
   labs(title = "Total Sulfur Dioxide for White Wine", x = "Total Sulfur Dioxide", y = "Quality") +
   geom_point(width = 0.15) +
   scale_fill_brewer(palette = "BuPu")
 
 #TSD - red
-ggplot(red_train, aes(x = total.sulfur.dioxide, y = quality)) + 
+ggplot(red, aes(x = total.sulfur.dioxide, y = quality)) + 
   geom_boxplot(aes(fill = quality)) +
   labs(title = "Total Sulfur Dioxide for Red Wine", x = "Total Sulfur Dioxide", y = "Quality") +
   geom_point(width = 0.15) +
@@ -250,14 +250,14 @@ ggplot(combinedWine, aes(x = sulphates, y = quality)) +
   scale_fill_brewer(palette = "YlOrRd")
 
 #sulfates - white
-ggplot(white_train, aes(x = sulphates, y = quality)) + 
+ggplot(white, aes(x = sulphates, y = quality)) + 
   geom_boxplot(aes(fill = quality)) +
   labs(title = "Sulfates for White Wine",  x = "Sulfates", y = "Quality") +
   geom_point(width = 0.15) +
   scale_fill_brewer(palette = "BuPu")
 
 #sulfates - red
-ggplot(red_train, aes(x = sulphates, y = quality)) + 
+ggplot(red, aes(x = sulphates, y = quality)) + 
   geom_boxplot(aes(fill = quality)) +
   labs(title = "Sulfates for Red Wine", x = "Sulfates", y = "RdPu") +
   geom_point(width = 0.15) +
