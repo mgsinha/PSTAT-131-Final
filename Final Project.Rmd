@@ -12,6 +12,21 @@ library(tidyverse)
 library(tidymodels)
 library(corrplot)
 library(ggthemes)
+library(klaR) # for naive bayes
+library(discrim)
+library(glmnet)
+library(rpart)
+library(randomForest)
+library(xgboost)
+library(ranger)
+library(vip)
+library(lubridate)
+library(dplyr)
+library(ISLR)
+library(rpart.plot)
+library(janitor)
+library(RColorBrewer)
+
 tidymodels_prefer()
 ```
 
@@ -28,69 +43,88 @@ We are analyzing the quality of wine based on 11 predictors: fixed acidity, vola
 
 We are interested in conducting analysis on both the white and red wine to assess the quality of wine in new wines in production so that they may be accurately priced and marketed.  
 
-## Proposed Project Timeline 
 
-<br>
-
-Week 2: Data cleaning<br>
-Week 3-5: Exploratory Data Analysis<br>
-Week 6-8: Model Building<br>
-Week 9: Conclusion and final touches<br>
-
-## Any questions or concerns
-
-<br>
-
-
-# Loading Data and Packages 
+# Loading Data  
 This project uses data on the white and red wine, which records information about the details of the wine. 
 
-```{r load packages and data}
-# load packages
-library(tidyverse)
-library(lubridate)
-library(tidymodels)
-library(dplyr)
+```{r load data, message = FALSE}
 
 white <- read.csv("Wine Dataset/winequality-white.csv", sep = ";")
-
 red <- read.csv("Wine Dataset/winequality-red.csv", sep = ";")
-
-# Make Column Names Clean 
-colnames(white) <- c("Fixed Acidity", "Volatile Acidity","Citric Acid", "Residual Sugar", "Chlorides", "Free Sulfur Dioxide", "Total Sulfur Dioxide", "Density", "pH", "Sulfates", "Alcohol", "Quality")
-colnames(red) <- c("Fixed Acidity", "Volatile Acidity","Citric Acid", "Residual Sugar", "Chlorides", "Free Sulfur Dioxide", "Total Sulfur Dioxide", "Density", "pH", "Sulfates", "Alcohol", "Quality")
-
-# Change quality to factor
-white$Quality <- factor(white$Quality, levels = c(3,4,5,6,7,8,9))
-red$Quality <- factor(red$Quality, levels = c(3,4,5,6,7,8,9))
-
-# Adding variable type so that we can do analysis on the combinedWine data set easily 
-white$Type <- "White"
-red$Type <- "Red"
 ```
 
 
 # Data Cleaning 
 
-Our data does not need to be cleaned because it's perfect :D
+To clean our data, we clean the column names, change quality into a factor so we can analyze it with classification models, and add the type "White" or "Red" to each data set. We also create a combined data frame with both values from white and red wine to see if there are significant differences between red and white evaluations for quality.  
+
+```{r data cleaning}
+# Make Column Names Clean 
+white %>% clean_names()
+red %>% clean_names()
+
+# Change quality to factor
+white$quality <- factor(white$quality, levels = c(3,4,5,6,7,8,9))
+red$quality <- factor(red$quality, levels = c(3,4,5,6,7,8,9))
+
+# Adding type
+white$type <- "White"
+red$type <- "Red"
+
+# data frame of combined wine
+combinedWine <- rbind(white, red)
+```
 
 # Data Split
 
-```{r data split}
+```{r data split, message = FALSE}
 white_split <- white %>% 
-  initial_split(prop = 0.8, strata = "Quality")
+  initial_split(prop = 0.8, strata = "quality")
 
 white_train <- training(white_split)
 white_test <- testing(white_split)
 
 red_split <- red %>% 
-  initial_split(prop = 0.8, strata = "Quality")
+  initial_split(prop = 0.8, strata = "quality")
 
 red_train <- training(red_split)
 red_test <- testing(red_split)
+
+white_fold <- vfold_cv(white_train, v = 10)
+red_fold <- vfold_cv(red_train, v = 10)
 ```
 
 ## Exploratory Data Analysis
+
+What sort of factors do winemakers and sommeliers look for in a quality wine? Generally, quality is determined by acidity, dryness, flavor profile or taste, alcohol content, and how well the wine is preserved or how it changes as it is stored. In our exploratory data analysis, we will analyze our predictors based on these five categories. First, acidity levels can be summarized through the pH levels, fixed acidity, volatile acidity, and citric acid content. Dryness is determined by the density. Taste can be broken down into sweetness and saltiness, which are caused by residual sugar and chlorides respectively. We will analyze alcohol content singularly to see its effect on the wine quality. Lastly, sulfurous compounds are what is generally used to preserve wine, so we will analyze free sulfur dioxide, total sulfur dioxide, and sulfates to see if the way a wine is preserved interacts with wine quality in an interesting way.
+
+Our data can be split into two datasets because experts look for different levels of acidity, sugar, etc. for white wine and red wine. Thus, we will have 3 different representations of the data: one for white wine, one for red wine, and one for both. 
+
+All of our predictors are continuous, so we will use box plots, histograms, and scatter plots to visualize our data and determine feature selection.
+
+First, let's see the distribution of quality between both data sets of wine. 
+ 
+```{r combined quality histogram}
+combinedWine <- rbind(white, red)
+ggplot(combinedWine, aes(quality)) + geom_bar(color = "black", fill = "pink") + labs(title = "Histogram of Quality - Total Wine") + xlab("Quality of Wine") + ylab("Count") 
+```
+```{r separated quality histogram}
+# ggplot(white_train, aes(Quality)) +
+#   geom_bar() +
+#   labs(
+#     title = "Histogram of Quality - White Wine"
+#   )
+# 
+# ggplot(red_train, aes(Quality)) +
+#   geom_bar() +
+#   labs(
+#     title = "Histogram of Quality - Red Wine"
+#   )
+```
+
+We can see that it is normally distributed, meaning that most wine has a quality value of 5 or 6, with few exceptionally good wines having a value of 8 or 9, and low quality wines having a quality value of 3. 
+
+Next, we look at the correlation matrices for white and red wine separately to determine which predictors are correlated and thus, which predictors we need to interact in our modelling recipes. 
 
 ```{r correlation matrix}
 white %>% 
@@ -106,30 +140,11 @@ red %>%
            method = 'color', main = 'Red Wine Correlation Plot')
 ```
 
-```{r combined quality histogram}
-combinedWine <- rbind(white, red)
-ggplot(combinedWine, aes(Quality)) + geom_bar() +labs(title = "Histogram of Quality - Total Wine") + xlab("Quality of Wine") + ylab("Count") #+ scale_fill_manual("pink","pink1","pink2","palevioletred","palevioletred1")
+In the white wine correlation matrix, density and residual sugar; and density and alcohol are the predictors with the highest correlation. We will also plot total sulfur dioxide and free sulfur dioxide which has a moderate correlation.
 
-# IDK HOW TO CHANGE THE COLORORORORO 
-```
+In the red wine correlation matrix, citric acid and fixed acidity; density and fixed acidity; citric acid and volatile acidity; pH and fixed acidity; and free sulfur dioxide and total sulfur dioxide are highly correlated with each other.  
 
-```{r separated quality histogram}
-ggplot(white_train, aes(Quality)) +
-  geom_bar() +
-  labs(
-    title = "Histogram of Quality - White Wine"
-  )
 
-ggplot(red_train, aes(Quality)) +
-  geom_bar() +
-  labs(
-    title = "Histogram of Quality - Red Wine"
-  )
-```
-
-```{r }
-
-```
 
 
 ## Model Fitting
