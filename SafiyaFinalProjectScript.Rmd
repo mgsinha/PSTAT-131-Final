@@ -340,7 +340,7 @@ collect_metrics(rnb_fit_cross)
 wtree_spec <- decision_tree() %>%
   set_engine("rpart")
 
-wtree_spec_class <- tree_spec %>%
+wtree_spec_class <- wtree_spec %>%
   set_mode("classification")
 
 wclass_tree_fit <- wtree_spec_class %>%
@@ -351,11 +351,11 @@ wclass_tree_wf<- workflow() %>%
               set_args(cost_complexity = tune())) %>% 
   add_formula(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol)
 
-param_grid <- grid_regular(cost_complexity(range = c(-3,-1)), levels = 10)
+param_grid <- grid_regular(cost_complexity(range = c(-5,1)), levels = 10)
 
 tune_res_poke <- tune_grid(
-  class_tree_wf,
-  resamples = pokemon_fold,
+  wclass_tree_wf,
+  resamples = white_fold,
   grid = param_grid,
   metric = metric_set(roc_auc)
 )
