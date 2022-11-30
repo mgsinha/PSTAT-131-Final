@@ -25,6 +25,7 @@ library(dplyr)
 library(ISLR)
 library(rpart.plot)
 library(janitor)
+library(ggpubr)
 
 tidymodels_prefer()
 ```
@@ -81,6 +82,8 @@ red$type <- "Red"
 
 # data frame of combined wine
 combinedWine <- rbind(white, red)
+
+
 ```
 
 
@@ -191,6 +194,40 @@ ggplot(combinedWine, mapping = aes(x = `citric.acid`, y = quality, fill = qualit
 ggplot(combinedWine, mapping = aes(x = `citric.acid`, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Citric Acid Levels Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd")+ coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
 ```
 
+```{r eda scatter plots}
+# scaled datasets 
+
+scaled_white = as.data.frame(scale(select(white, c(-quality,-type))))
+scaled_red = as.data.frame(scale(select(red, c(-quality,-type))))
+
+# WHITE
+# scaled white residual sugar versus density 
+ggplot(scaled_white, aes(x = residual.sugar, y = density)) + geom_point()+scale_x_continuous(name = "Residual Sugar") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)
+# scaled white alcohol versus density 
+ggplot(scaled_white, aes(x = alcohol, y = density)) + geom_point()+scale_x_continuous(name = "Alcohol") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)
+
+# scaled white free sulfur dioxide versus total sulfur dioxide
+ggplot(scaled_white, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxide") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)
+
+
+# RED
+
+# scaled red volatile acidity versus citric acid
+ggplot(scaled_red, aes(x = volatile.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Volatile Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)
+
+# scaled red fixed acidity versus citric acid 
+ggplot(scaled_red, aes(x = fixed.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)
+
+# scaled red fixed acidity versus pH
+ggplot(scaled_red, aes(x = fixed.acidity, y = pH)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "pH") + geom_smooth(method = "lm", se = FALSE)
+
+# scaled red fixed acidity versus density
+ggplot(scaled_red, aes(x = fixed.acidity, y = density())) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)
+
+# scaled red free sulfur dioxide versus total sulfur dioxide
+ggplot(scaled_red, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxid") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)
+
+```
 
 ## Model Fitting
 ```{r creating recipe}
