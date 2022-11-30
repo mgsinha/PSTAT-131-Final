@@ -146,5 +146,4 @@ In the red wine correlation matrix, citric acid and fixed acidity; density and f
 
 
 
-
 ## Model Fitting
