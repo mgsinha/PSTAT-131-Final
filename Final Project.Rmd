@@ -26,6 +26,7 @@ library(ISLR)
 library(rpart.plot)
 library(janitor)
 library(RColorBrewer)
+library(ggpubr)
 
 tidymodels_prefer()
 ```
@@ -128,13 +129,13 @@ Next, we look at the correlation matrices for white and red wine separately to d
 
 ```{r correlation matrix}
 white %>% 
-  select(is.numeric) %>% 
+  select(where(is.numeric)) %>% 
   cor() %>% 
   corrplot(type = 'lower', diag = FALSE, 
            method = 'color', main = 'White Wine Correlation Plot')
 
 red %>% 
-  select(is.numeric) %>% 
+  select(where(is.numeric)) %>% 
   cor() %>% 
   corrplot(type = 'lower', diag = FALSE, 
            method = 'color', main = 'Red Wine Correlation Plot')
@@ -144,6 +145,115 @@ In the white wine correlation matrix, density and residual sugar; and density an
 
 In the red wine correlation matrix, citric acid and fixed acidity; density and fixed acidity; citric acid and volatile acidity; pH and fixed acidity; and free sulfur dioxide and total sulfur dioxide are highly correlated with each other.  
 
+To visualize and validate these correlations, let's take a look at the scaled scatter plot of each.
 
+```{r white wine scatter plots, message=FALSE}
+
+# scaled datasets 
+scaled_white = as.data.frame(scale(select(white, c(-quality,-type))))
+scaled_red = as.data.frame(scale(select(red, c(-quality,-type))))
+
+# scaled white residual sugar versus density 
+wrsd = ggplot(scaled_white, aes(x = residual.sugar, y = density)) + geom_point()+scale_x_continuous(name = "Residual Sugar") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)+ ggtitle(" Residual Sugar Versus Density") + theme(plot.title = element_text(size = 5))
+
+# scaled white alcohol versus density 
+wad = ggplot(scaled_white, aes(x = alcohol, y = density)) + geom_point()+scale_x_continuous(name = "Alcohol") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Alcohol Versus Density") + theme(plot.title = element_text(size = 5))
+
+# scaled white free sulfur dioxide versus total sulfur dioxide
+wfsdtsd = ggplot(scaled_white, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxide") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Free Sulfur Versus Total Sulfur Dioxide") + theme(plot.title = element_text(size = 5))
+
+ggarrange(wrsd, wad, wfsdtsd + rremove("x.text"), ncol = 3, nrow = 1) %>% annotate_figure(top = text_grob("White Wine Scaled"))
+```
+
+```{r red wine scatter plots}
+# scaled red volatile acidity versus citric acid
+rvaca = ggplot(scaled_red, aes(x = volatile.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Volatile Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Volatile Acidity Versus Citric Acid") + theme(plot.title = element_text(size = 5))
+
+# scaled red fixed acidity versus citric acid 
+rfaca = ggplot(scaled_red, aes(x = fixed.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus Citric Acid") + theme(plot.title = element_text(size = 5))
+
+# scaled red fixed acidity versus pH
+rfap = ggplot(scaled_red, aes(x = fixed.acidity, y = pH)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "pH") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus pH") + theme(plot.title = element_text(size = 5))
+
+# scaled red fixed acidity versus density
+rfad = ggplot(scaled_red, aes(x = fixed.acidity, y = density)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus Density") + theme(plot.title = element_text(size = 5))
+
+# scaled red free sulfur dioxide versus total sulfur dioxide
+fsdtsd = ggplot(scaled_red, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxide") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Free Sulfur Dioxide Versus Total Sulfur Dioxide") + theme(plot.title = element_text(size = 5))
+
+ggarrange(rvaca, rfaca, rfap, rfad, fsdtsd, ncol = 3, nrow = 2) %>% annotate_figure(top = text_grob("Red Wine Scaled"))
+
+```
+
+Based on the scatter plots, we can visualize the correlations between the predictors. For example, for white wine, density has a strong positive correlation with residual sugar and a moderate negative correlation with alcohol. Through these scatter plots, we confirm the existence of correlations predicted by our initial correlation matrix and therefore will take these interactions into account for our modeling recipes for white and red wine. 
+
+Now, we can take a look at the box plots for several of our predictors to see the ways that they interact with wine quality, isolated from the other predictors. First, we will visualize acidity levels which can be measured through fixed acidity, volatile acidity, and citric acid levels. As shown above in the scatter plots, these three predictors are highly correlated with each other in red wine. 
+
+```{r eda boxplot of fixed acidity, volatile acidity, and citric acid versus quality, message = FALSE}
+
+# FIXED ACIDITY 
+# Same Page but Seperate
+ggplot(combinedWine, mapping = aes(x = `fixed.acidity`, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Fixed Acidity Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1) +coord_cartesian( xlim = c(0,16), ylim = NULL, default = FALSE )
+
+# ___________________________________________________________________________
+# VOLATILE ACIDITY 
+# Same Page but Seperate
+ggplot(combinedWine, mapping = aes(x = `volatile.acidity`, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Volatile_Acidity Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1) + coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
+
+# ___________________________________________________________________________
+# CITRIC ACID 
+# Same Page but Separate (Cut off at 1)
+ggplot(combinedWine, mapping = aes(x = `citric.acid`, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Citric Acid Levels Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1)+ coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
+
+```
+
+acidity interpretation.
+
+Next, let's take a look at dryness which is determined by the predictor density. Based on the correlation matrix and scatter plots, density also interacts with residual sugar and alcohol in white wine and with fixed acidity in red wine. 
+
+```{r eda box plot density, message=FALSE}
+ggplot(combinedWine, mapping = aes(x = density, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = density, y = quality)) + labs(title = "Red and White Density Levels versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1)+ coord_cartesian( xlim = c(.985,1.01), ylim = NULL, default = FALSE )
+```
+
+Although density is correlated with several predictors according to the correlation matrices and scatter plots, in this box plot, we can see that density stays relatively consistent for each level of wine quality. 
+
+Next, we will look at the taste of the wine, which is determined by levels of sweetness and saltiness. These are affected by sugar levels and chlorides respectively. 
+
+```{r eda box plot taste, message=FALSE}
+#sugar content
+ggplot(combinedWine, mapping = aes(x = residual.sugar, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = residual.sugar, y = quality)) + labs(title = "Red and White Residual Sugar Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1) + coord_cartesian( xlim = c(0,25), ylim = NULL, default = FALSE )
+
+#chlorides
+ggplot(combinedWine, mapping = aes(x = chlorides, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = chlorides, y = quality)) + labs(title = "Red and White Chloride Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1) + coord_cartesian( xlim = c(0,0.3), ylim = NULL, default = FALSE )
+```
+
+taste interpretation 
+
+Next, we will analyze alcohol content, which can affect the taste of the wine as well. 
+
+```{r eda box plot alcohol, message=FALSE}
+ggplot(combinedWine, mapping = aes(x = alcohol, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Alcohol Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1) 
+```
+
+There is generally higher alcohol content associated with a wine of higher quality. 
+
+Lastly, let's look at the preservative content, which is determined by free sulfur dioxide, total sulfur dioxide, and sulfates. 
+
+```{r eda box plot preservatives, message=FALSE}
+#free sulfur dioxide
+ggplot(combinedWine, mapping = aes(x = free.sulfur.dioxide, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = free.sulfur.dioxide, y = quality)) + labs(title = "Red and White Free Sulfur Dioxide Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1) + coord_cartesian( xlim = c(0,150), ylim = NULL, default = FALSE )
+
+#total sulfur dioxide
+ggplot(combinedWine, mapping = aes(x = total.sulfur.dioxide, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = total.sulfur.dioxide, y = quality)) + labs(title = "Red and White Total Sulfur Dioxide Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1) + coord_cartesian( xlim = c(0,300), ylim = NULL, default = FALSE )
+
+#sulfates
+ggplot(combinedWine, mapping = aes(x = sulphates, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = sulphates, y = quality)) + labs(title = "Red and White Sulfate Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1) + coord_cartesian( xlim = c(0,1.5), ylim = NULL, default = FALSE )
+
+```
+
+preservatives interpretation
+
+concluding paragraph
 
 ## Model Fitting
+
