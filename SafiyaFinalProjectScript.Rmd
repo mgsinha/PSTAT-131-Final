@@ -231,12 +231,26 @@ ggarrange(rvaca, rfaca, rfap, rfad, fsdtsd, ncol = 3, nrow = 2) %>% annotate_fig
 
 ```
 
+```{r residual sugar red}
+# we removed outliers to ensure that the variation was not due to the outliers 
+ggplot(red[red$free.sulfur.dioxide < 50,], aes(x = free.sulfur.dioxide, y = quality)) + 
+  geom_boxplot(aes(fill = quality)) +
+  labs(title = "Free Sulfur Dioxide for Red Wine", x = "Free Sulfur Dioxide", y = "Quality") +
+  geom_point(width = 0.15) +
+  scale_fill_brewer(palette = "RdPu")
+
+```
 ## Model Fitting
 ```{r creating recipe}
 # creating recipe 
 white_recipe <- recipe(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~volatile.acidity:citric.acid + free.sulfur.dioxide:total.sulfur.dioxide) %>% step_normalize(all_predictors())
 
 red_recipe <- recipe(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~volatile.acidity:citric.acid + free.sulfur.dioxide:total.sulfur.dioxide)%>% step_normalize(all_predictors())
+
+white_recipe <- recipe(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~density:residual.sugar + density:alcohol) %>% step_normalize(all_predictors())
+
+red_recipe <- recipe(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~citric.acid:fixed.acidity + density:fixed.acidity + ph:fixed.acidity + citric.acid:volatile.acidity + free.sulfur.dioxide:total.sulfur.dioxide)%>% step_normalize(all_predictors())
+
 ```
 
 ```{r log reg}
