@@ -94,6 +94,7 @@ Our data does not need to be cleaned because it's perfect :D
 # Data Split
 
 ```{r data split, message = FALSE}
+set.seed(1234)
 white_split <- white %>% 
   initial_split(prop = 0.8, strata = "quality")
 
@@ -242,14 +243,102 @@ ggplot(red[red$free.sulfur.dioxide < 50,], aes(x = free.sulfur.dioxide, y = qual
 ```
 ## Model Fitting
 ```{r creating recipe}
-# creating recipe 
-white_recipe <- recipe(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~volatile.acidity:citric.acid + free.sulfur.dioxide:total.sulfur.dioxide) %>% step_normalize(all_predictors())
-
-red_recipe <- recipe(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~volatile.acidity:citric.acid + free.sulfur.dioxide:total.sulfur.dioxide)%>% step_normalize(all_predictors())
+# creating recipes
 
 white_recipe <- recipe(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~density:residual.sugar + density:alcohol) %>% step_normalize(all_predictors())
 
-red_recipe <- recipe(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~citric.acid:fixed.acidity + density:fixed.acidity + ph:fixed.acidity + citric.acid:volatile.acidity + free.sulfur.dioxide:total.sulfur.dioxide)%>% step_normalize(all_predictors())
+red_recipe <- recipe(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train) %>% step_dummy(all_nominal_predictors()) %>% step_interact(~ citric.acid:volatile.acidity + free.sulfur.dioxide:total.sulfur.dioxide)%>% step_normalize(all_predictors())
+
+```
+
+```{r White Log, LDA, QDA, NB k-fold}
+# white 
+
+#logistic regression model using cross validation
+wlog_model <- logistic_reg() %>% 
+  set_engine("glm")%>% 
+  set_mode("classification")
+
+wlog_wkflow <- workflow() %>% 
+  add_model(wlog_model) %>% 
+  add_recipe(white_recipe)
+
+wlog_reg_fit <- fit_resamples(wlog_wkflow, white_fold)
+
+collect_metrics(wlog_reg_fit)
+
+
+#lda model using cross validation
+wlda_model <- discrim_linear() %>% 
+  set_mode("classification") %>% 
+  set_engine("MASS") 
+
+wlda_wkflow<- workflow() %>% 
+  add_model(wlda_model) %>% 
+  add_recipe(white_recipe)
+
+wlda_fit_cross <- fit_resamples(wlda_wkflow, white_fold)
+
+collect_metrics(wlda_fit_cross)
+
+#naive bayes model using cross validation
+wnb_mod <- naive_Bayes() %>% 
+  set_mode("classification") %>% 
+  set_engine("klaR") %>% 
+  set_args(usekernel = FALSE) 
+
+wnb_wkflow <- workflow() %>% 
+  add_model(wnb_mod) %>% 
+  add_recipe(white_recipe)
+
+wnb_fit_cross <- fit_resamples(wnb_wkflow, white_fold)
+
+collect_metrics(wnb_fit_cross)
+```
+
+```{r Red Log, LDA, QDA, NB k-fold}
+# red 
+
+#logistic regression model using cross validation
+rlog_model <- logistic_reg() %>% 
+  set_engine("glm")%>% 
+  set_mode("classification")
+
+rlog_wkflow <- workflow() %>% 
+  add_model(rlog_model) %>% 
+  add_recipe(red_recipe)
+
+#rlog_reg_fit <- fit_resamples(rlog_wkflow, red_fold)
+
+#collect_metrics(rlog_reg_fit)
+
+
+#lda model using cross validation
+rlda_model <- discrim_linear() %>% 
+  set_mode("classification") %>% 
+  set_engine("MASS") 
+
+rlda_wkflow<- workflow() %>% 
+  add_model(rlda_model) %>% 
+  add_recipe(red_recipe)
+
+rlda_fit_cross <- fit_resamples(rlda_wkflow, red_fold)
+
+collect_metrics(rlda_fit_cross)
+
+#naive bayes model using cross validation
+rnb_mod <- naive_Bayes() %>% 
+  set_mode("classification") %>% 
+  set_engine("klaR") %>% 
+  set_args(usekernel = FALSE) 
+
+rnb_wkflow <- workflow() %>% 
+  add_model(rnb_mod) %>% 
+  add_recipe(red_recipe)
+
+rnb_fit_cross <- fit_resamples(rnb_wkflow, red_fold)
+
+collect_metrics(rnb_fit_cross)
 
 ```
 
@@ -343,22 +432,6 @@ print(rlda_res)
 print(rlda_acc)
 ```
 
-```{r LDA and QDA k-fold}
-# white lda model using cross validation
-wlda_model_cross <- discrim_linear() %>% 
-  set_mode("classification") %>% 
-  set_engine("MASS") 
-
-wlda_wkflow_cross <- workflow() %>% 
-  add_model(wlda_model_cross) %>% 
-  add_recipe(white_recipe)
-
-wlda_fit_cross <- fit_resamples(wlda_wkflow_cross, white_fold)
-
-collect_metrics(wlda_fit_cross)
-
-```
-
 ```{r Naive Bayes model}
 # white
 wnb_mod <- naive_Bayes() %>% 
@@ -374,19 +447,7 @@ wnb_fit_cross <- fit_resamples(wnb_wkflow, white_fold)
 
 collect_metrics(wnb_fit_cross)
 
-# red
-rnb_mod <- naive_Bayes() %>% 
-  set_mode("classification") %>% 
-  set_engine("klaR") %>% 
-  set_args(usekernel = FALSE) 
 
-rnb_wkflow <- workflow() %>% 
-  add_model(rnb_mod) %>% 
-  add_recipe(red_recipe)
-
-rnb_fit_cross <- fit_resamples(rnb_wkflow, red_fold)
-
-collect_metrics(rnb_fit_cross)
 ```
 
 ```{r decision tree}
