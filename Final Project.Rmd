@@ -479,14 +479,14 @@ rclass_tree_fit %>%
   extract_fit_engine() %>%
   rpart.plot()
 
-# augmentsed on training 
+# augmented on training 
 augment(rclass_tree_fit, new_data = red_train) %>%
   accuracy(truth = quality, estimate = .pred_class)
 
 augment(rclass_tree_fit, new_data = red_train) %>%
   conf_mat(truth = quality, estimate = .pred_class)
 
-# augmentsed on testing 
+# augmented on testing 
 augment(rclass_tree_fit, new_data = red_train) %>%
   conf_mat(truth = quality, estimate = .pred_class) 
 
