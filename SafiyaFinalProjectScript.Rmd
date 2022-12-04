@@ -449,11 +449,11 @@ augment(wclass_tree_fit, new_data = white_train) %>%
   accuracy(truth = quality, estimate = .pred_class)
 
 augment(wclass_tree_fit, new_data = white_train) %>%
-  conf_mat(truth = quality, estimate = .pred_class)
+  conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
 
 # augmentsed on testing 
 augment(wclass_tree_fit, new_data = white_test) %>%
-  conf_mat(truth = quality, estimate = .pred_class) 
+  conf_mat(truth = quality, estimate = .pred_class)  %>% autoplot(type = "heatmap")
 
 augment(wclass_tree_fit, new_data = white_test) %>%
   accuracy(truth = quality, estimate = .pred_class)
@@ -476,6 +476,7 @@ tune_res_white <- tune_grid(
 autoplot(tune_res_white)
 
 # extracting the best cost complexitiy parameter
+wbest_rocauc <-collect_metrics(tune_res_white) %>% arrange(desc(mean))
 best_complexity <- select_best(tune_res_white)
 
 wclass_tree_final <- finalize_workflow(wclass_tree_wf, best_complexity)
@@ -550,6 +551,9 @@ tune_res_red <- tune_grid(
 autoplot(tune_res_red)
 
 # extracting the best cost complexitiy parameter
+
+rbest_rocauc <-collect_metrics(tune_res_red) %>% arrange(desc(mean))
+
 best_complexity <- select_best(tune_res_red)
 
 rclass_tree_final <- finalize_workflow(rclass_tree_wf, best_complexity)
@@ -599,18 +603,95 @@ wtune_res_randfor <- tune_grid(
 autoplot(wtune_res_randfor)
 
 # collecting metrics to find best mean
-collect_metrics(wtune_res_randfor) %>% arrange(desc(mean))
-best_metric1 <- select_best(tune_res_poke_randfor)
+wbest_rocauc1 <-collect_metrics(wtune_res_randfor) %>% arrange(desc(mean))
 
-randfor_poke_final <- rand_forest(mtry = 2, trees = 17, min_n = 32) %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
+best_metric <- select_best(wtune_res_randfor)
 
-randfor_fit_final <- fit(randfor_poke_final, type_1 ~ hp + attack + defense + sp_atk + sp_def + speed + generation + legendary, data = pokemon_training)
+wrandfor_final <- rand_forest(mtry = 2, trees = 17, min_n = 30) %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
+wrandfor_fit_final <- fit(wrandfor_final, data = white_train)
 
-best_complexity <- select_best(tune_res_red)
+vip(wrandfor_fit_final)
+```
 
-rclass_tree_final <- finalize_workflow(rclass_tree_wf, best_complexity)
+```{r random forest red}
 
-rclass_tree_final_fit <- fit(rclass_tree_final, data = red_train)
+# setting random forest model up
+rrandfor <- rand_forest() %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
 
-vip(randfor_fit_final)
+rrandfor_wf <- workflow() %>%
+  add_model(rrandfor %>%
+              set_args(mtry = tune(), trees = tune(), min_n = tune())) %>% 
+  add_formula(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol)
+
+# tuning the model to find the best arguments 
+param_grid2 <- grid_regular(mtry(range = c(1,9)), trees(range = c(15,17)), min_n(range = c(30,50)), levels = 8)
+
+rtune_res_randfor <- tune_grid(
+  rrandfor_wf,
+  resamples = red_fold,
+  grid = param_grid2,
+  metric = metric_set(accuracy)
+)
+
+autoplot(rtune_res_randfor)
+
+# collecting metrics to find best mean
+rbest_rocauc1 <- collect_metrics(rtune_res_randfor) %>% arrange(desc(mean))
+print(best_rocauc1)
+best_metric <- select_best(rtune_res_randfor)
+
+rrandfor_final <- rand_forest(mtry = 2, trees = 17, min_n = 30) %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
+wrandfor_fit_final <- fit(wrandfor_final, data = white_train)
+
+vip(wrandfor_fit_final)
+```
+
+```{r boosted tree white}
+wboost_spec <-  boost_tree(tree_depth = 5) %>% 
+  set_engine("xgboost") %>% 
+  set_mode("classification")
+
+wboost_wf <- workflow() %>%
+  add_model(wboost_spec %>%
+              set_args(trees = tune())) %>% 
+  add_formula(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol)
+
+param_grid3 <- grid_regular(trees(range = c(10,2000)), levels = 10)
+
+wtune_res_boosted <- tune_grid(
+  wboost_wf,
+  resamples = white_fold,
+  grid = param_grid3
+)
+autoplot(wtune_res_boosted)
+wbest_rocauc2 <- collect_metrics(wtune_res_boosted) %>% arrange(desc(mean))
+print(best_rocauc2)
+```
+
+```{r boosted tree red}
+rboost_spec <-  boost_tree(tree_depth = 5) %>% 
+  set_engine("xgboost") %>% 
+  set_mode("classification")
+
+rboost_wf <- workflow() %>%
+  add_model(rboost_spec %>%
+              set_args(trees = tune())) %>% 
+  add_formula(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol)
+
+param_grid4 <- grid_regular(trees(range = c(10,2000)), levels = 10)
+
+rtune_res_boosted <- tune_grid(
+  rboost_wf,
+  resamples = red_fold,
+  grid = param_grid4
+)
+autoplot(rtune_res_boosted)
+wbest_rocauc2 <- collect_metrics(rtune_res_boosted) %>% arrange(desc(mean))
+print(wbest_rocauc2)
+```
+
+```{r best roc}
+# augment all the rocs from decision, randforest, boosted --> see which one has the best --> fit best on testing 
+best_roc_table <- rbind(best_rocauc[1,c(2,4)], best_rocauc1[1,c(4,6)], best_rocauc2[1,c(2,4)] )
+best_roc_table
 ```
