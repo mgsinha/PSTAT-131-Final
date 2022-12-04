@@ -50,49 +50,56 @@ This project uses data on the white and red wine, which records information abou
 
 ```{r load data, message = FALSE}
 
-white <- read.csv("Wine Dataset/winequality-white.csv", sep = ";")
-red <- read.csv("Wine Dataset/winequality-red.csv", sep = ";")
+white_og <- read.csv("Wine Dataset/winequality-white.csv", sep = ";")
+red_og <- read.csv("Wine Dataset/winequality-red.csv", sep = ";")
 ```
 
 
 # Data Cleaning 
 
-To clean our data, we clean the column names, change quality into a factor so we can analyze it with classification models, and add the type "White" or "Red" to each data set. We also create a combined data frame with both values from white and red wine to see if there are significant differences between red and white evaluations for quality.  
+To clean our data, we clean the column names, change quality into a factor so we can analyze it with classification models, and add the type "White" or "Red" to each data set. We removed any rows with a quality value of 9 because there are too few instances, and thus, it inhibits our models from performing correctly later on. We also create a combined data frame with both values from white and red wine to see if there are significant differences between red and white evaluations for quality.  
 
 ```{r data cleaning}
 # Make Column Names Clean 
-white %>% clean_names()
-red %>% clean_names()
+white_og %>% clean_names()
+red_og %>% clean_names()
+
+#take out data with quality = 9; red does not have any values of 9
+white <- white_og[white_og$quality < 9,]
+red <- red_og[red_og$quality < 9,]
 
 # Change quality to factor
-white$quality <- factor(white$quality, levels = c(3,4,5,6,7,8,9))
-red$quality <- factor(red$quality, levels = c(3,4,5,6,7,8,9))
+white$quality <- factor(white$quality, levels = c(3,4,5,6,7,8))
+red$quality <- factor(red$quality, levels = c(3,4,5,6,7,8))
 
 # Adding type
 white$type <- "White"
 red$type <- "Red"
 
 # data frame of combined wine
+combinedWine_og <- rbind(white_og, red_og)
 combinedWine <- rbind(white, red)
 ```
 
 # Data Split
 
+In our data split, we put a proportion of .7 of each original data set into a training data set and a proportion of .3 into the testing data sets, stratifying by quality. In this section, we also folded our data into 5 folds for later cross validation use.
+
 ```{r data split, message = FALSE}
 white_split <- white %>% 
-  initial_split(prop = 0.8, strata = "quality")
+  initial_split(prop = 0.7, strata = "quality")
 
 white_train <- training(white_split)
 white_test <- testing(white_split)
 
 red_split <- red %>% 
-  initial_split(prop = 0.8, strata = "quality")
+  initial_split(prop = 0.7, strata = "quality")
 
 red_train <- training(red_split)
 red_test <- testing(red_split)
 
-white_fold <- vfold_cv(white_train, v = 10)
-red_fold <- vfold_cv(red_train, v = 10)
+white_fold <- vfold_cv(white_train, v = 5)
+red_fold <- vfold_cv(red_train, v = 5)
 ```
 
 ## Exploratory Data Analysis
@@ -106,21 +113,7 @@ All of our predictors are continuous, so we will use box plots, histograms, and 
 First, let's see the distribution of quality between both data sets of wine. 
  
 ```{r combined quality histogram}
-combinedWine <- rbind(white, red)
-ggplot(combinedWine, aes(quality)) + geom_bar(color = "black", fill = "pink") + labs(title = "Histogram of Quality - Total Wine") + xlab("Quality of Wine") + ylab("Count") 
-```
-```{r separated quality histogram}
-# ggplot(white_train, aes(Quality)) +
-#   geom_bar() +
-#   labs(
-#     title = "Histogram of Quality - White Wine"
-#   )
-# 
-# ggplot(red_train, aes(Quality)) +
-#   geom_bar() +
-#   labs(
-#     title = "Histogram of Quality - Red Wine"
-#   )
+ggplot(combinedWine_og, aes(quality)) + geom_bar(color = "black", fill = "pink") + labs(title = "Histogram of Quality - Total Wine") + xlab("Quality of Wine") + ylab("Count") 
 ```
 
 We can see that it is normally distributed, meaning that most wine has a quality value of 5 or 6, with few exceptionally good wines having a value of 8 or 9, and low quality wines having a quality value of 3. 
@@ -191,31 +184,27 @@ Now, we can take a look at the box plots for several of our predictors to see th
 
 ```{r eda boxplot of fixed acidity, volatile acidity, and citric acid versus quality, message = FALSE}
 
-# FIXED ACIDITY 
-# Same Page but Seperate
+#fixed acidity
 ggplot(combinedWine, mapping = aes(x = `fixed.acidity`, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Fixed Acidity Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1) +coord_cartesian( xlim = c(0,16), ylim = NULL, default = FALSE )
 
-# ___________________________________________________________________________
-# VOLATILE ACIDITY 
-# Same Page but Seperate
-ggplot(combinedWine, mapping = aes(x = `volatile.acidity`, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Volatile_Acidity Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1) + coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
+# volatile acidity 
+ggplot(combinedWine, mapping = aes(x = `volatile.acidity`, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Volatile Acidity Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1) + coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
 
-# ___________________________________________________________________________
-# CITRIC ACID 
-# Same Page but Separate (Cut off at 1)
+# citric acid 
 ggplot(combinedWine, mapping = aes(x = `citric.acid`, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Citric Acid Levels Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1)+ coord_cartesian( xlim = c(0,1), ylim = NULL, default = FALSE )
 
 ```
 
-acidity interpretation.
+From these boxp lots, we can see that fixed acidity levels are relatively consistent in both red and white wine. Volatile acidity has a  negative correlation with quality in red wine, but relatively consistent averages for each level of wine quality in white wine. Citric acid levels in red wine have a stronger positive correlation than in white wine. In general, we can see that acidity levels fluctuate more in red wine than in white wine.  
 
 Next, let's take a look at dryness which is determined by the predictor density. Based on the correlation matrix and scatter plots, density also interacts with residual sugar and alcohol in white wine and with fixed acidity in red wine. 
 
 ```{r eda box plot density, message=FALSE}
+# density
 ggplot(combinedWine, mapping = aes(x = density, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = density, y = quality)) + labs(title = "Red and White Density Levels versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1)+ coord_cartesian( xlim = c(.985,1.01), ylim = NULL, default = FALSE )
 ```
 
-Although density is correlated with several predictors according to the correlation matrices and scatter plots, in this box plot, we can see that density stays relatively consistent for each level of wine quality. 
+Although density is correlated with several predictors according to the correlation matrices and scatter plots, in this box plot, we can see that density stays relatively consistent, around 1, for each level of wine quality. 
 
 Next, we will look at the taste of the wine, which is determined by levels of sweetness and saltiness. These are affected by sugar levels and chlorides respectively. 
 
@@ -227,7 +216,7 @@ ggplot(combinedWine, mapping = aes(x = residual.sugar, y = quality, fill = quali
 ggplot(combinedWine, mapping = aes(x = chlorides, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = chlorides, y = quality)) + labs(title = "Red and White Chloride Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1) + coord_cartesian( xlim = c(0,0.3), ylim = NULL, default = FALSE )
 ```
 
-taste interpretation 
+White wine has, on average, higher and more variable sugar levels than red wine while red wine has an on average higher chloride content than white wine. There seem to be a higher number of outliers in the values of chloride.
 
 Next, we will analyze alcohol content, which can affect the taste of the wine as well. 
 
@@ -235,7 +224,7 @@ Next, we will analyze alcohol content, which can affect the taste of the wine as
 ggplot(combinedWine, mapping = aes(x = alcohol, y = quality, fill = quality)) + geom_boxplot() + geom_point(white_train, mapping = aes(x = alcohol, y = quality)) + labs(title = "Red and White Alcohol Content versus Quality", fill = "Quality")  + scale_fill_brewer(palette="PuRd") + facet_wrap(. ~ type, nrow = 1) 
 ```
 
-There is generally higher alcohol content associated with a wine of higher quality. 
+There is generally higher alcohol content associated with a wine of higher quality but there is not a significant different in averages between red wine and white wine. 
 
 Lastly, let's look at the preservative content, which is determined by free sulfur dioxide, total sulfur dioxide, and sulfates. 
 
@@ -251,9 +240,11 @@ ggplot(combinedWine, mapping = aes(x = sulphates, y = quality, fill = quality)) 
 
 ```
 
-preservatives interpretation
+From the box plots we can see that red wine generally has a lower sulfur dioxide content than white wine. Also, averages across each stratification of quality have similar values except for sulfates in red wine, which have a slight positive correlation with quality. 
 
-concluding paragraph
+concluding sentence
 
 ## Model Fitting
+
+
 
