@@ -85,8 +85,6 @@ red$type <- "Red"
 
 # data frame of combined wine
 combinedWine <- rbind(white, red)
-
-
 ```
 
 
@@ -129,8 +127,6 @@ red %>%
   corrplot(type = 'lower', diag = FALSE, 
            method = 'color', main = 'Red Wine Correlation Plot')
 ```
-
-
 
 ```{r eda boxplot of alcohol versus quality, message = FALSE}
 ggplot(white_train, aes(x = alcohol, y = quality)) + geom_boxplot(aes(fill = quality))+ geom_point() + 
@@ -269,7 +265,7 @@ wlda_wkflow<- workflow() %>%
 
 wlda_fit_cross <- fit_resamples(wlda_wkflow, white_fold)
 
-collect_metrics(wlda_fit_cross)
+collect_metrics(wlda_fit_cross)%>% mutate(model_type = "LDA")
 
 #naive bayes model using cross validation
 wnb_mod <- naive_Bayes() %>% 
@@ -283,7 +279,7 @@ wnb_wkflow <- workflow() %>%
 
 wnb_fit_cross <- fit_resamples(wnb_wkflow, white_fold)
 
-collect_metrics(wnb_fit_cross)
+collect_metrics(wnb_fit_cross) %>% mutate(model_type = "Naive Bayes")
 ```
 
 ```{r Red Log, LDA, QDA, NB k-fold}
@@ -300,7 +296,7 @@ rlda_wkflow<- workflow() %>%
 
 rlda_fit_cross <- fit_resamples(rlda_wkflow, red_fold)
 
-collect_metrics(rlda_fit_cross)
+collect_metrics(rlda_fit_cross) %>% mutate(model_type = "LDA")
 
 #naive bayes model using cross validation
 rnb_mod <- naive_Bayes() %>% 
@@ -314,10 +310,8 @@ rnb_wkflow <- workflow() %>%
 
 rnb_fit_cross <- fit_resamples(rnb_wkflow, red_fold)
 
-collect_metrics(rnb_fit_cross)
-
+collect_metrics(rnb_fit_cross) %>% mutate(model_type = "Naive Bayes")
 ```
-
 
 ```{r log reg}
 glm.fit <- glm(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train, family = binomial)
@@ -383,7 +377,7 @@ wlda_res <- predict(wlda_fit, new_data = white_test %>%  select(-quality), type 
 
 wlda_res <- bind_cols(wlda_res, white_test %>%  select(quality)) 
 
-wlda_acc <- augment(wlda_fit, new_data = white_test) %>% accuracy(truth = quality, estimate = .pred_class)
+wlda_acc <- augment(wlda_fit, new_data = white_test) %>% accuracy(truth = quality, estimate = .pred_class) %>% mutate(model_type = "White LDA Model")
 
 print(wlda_res)
 print(wlda_acc)
@@ -403,7 +397,7 @@ rlda_res <- predict(rlda_fit, new_data = red_test %>%  select(-quality), type = 
 
 rlda_res <- bind_cols(rlda_res, red_test %>%  select(quality)) 
 
-rlda_acc <- augment(rlda_fit, new_data = red_test) %>% accuracy(truth = quality, estimate = .pred_class)
+rlda_acc <- augment(rlda_fit, new_data = red_test) %>% accuracy(truth = quality, estimate = .pred_class)%>% mutate(model_type = "Red LDA Model")
 
 print(rlda_res)
 print(rlda_acc)
@@ -423,16 +417,14 @@ wnb_wkflow <- workflow() %>%
 wnb_fit_cross <- fit_resamples(wnb_wkflow, white_fold)
 
 collect_metrics(wnb_fit_cross)
-
-
 ```
 
 ```{r decision tree white}
 # decision tree specification
 wtree_spec <- decision_tree() %>%
-  set_engine("rpart")
+  set_engine("rpart", model=TRUE)
 
-# setting mode to classificiation
+# setting mode to classification
 wtree_spec_class <- wtree_spec %>%
   set_mode("classification")
 
@@ -440,15 +432,15 @@ wclass_tree_fit <- wtree_spec_class %>%
   fit(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train)
 
 
-wclass_tree_fit %>%
+wDecisionTreePre <- wclass_tree_fit %>%
   extract_fit_engine() %>%
-  rpart.plot()
+  rpart.plot(main="White Wine Decision Tree")
 
-# augmentsed on training 
-augment(wclass_tree_fit, new_data = white_train) %>%
+# augmented on training 
+wDecisionTreeAccPre <- augment(wclass_tree_fit, new_data = white_train) %>%
   accuracy(truth = quality, estimate = .pred_class)
 
-augment(wclass_tree_fit, new_data = white_train) %>%
+wDecisionTreeConfMatrixPre <- augment(wclass_tree_fit, new_data = white_train) %>%
   conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
 
 # augmentsed on testing 
@@ -473,33 +465,38 @@ tune_res_white <- tune_grid(
   metric = metric_set(accuracy)
 )
 
-autoplot(tune_res_white)
+wAutoPlot <- autoplot(tune_res_white)
 
 # extracting the best cost complexitiy parameter
-wbest_rocauc <-collect_metrics(tune_res_white) %>% arrange(desc(mean))
+wbest_rocauc <- collect_metrics(tune_res_white) %>% arrange(desc(mean))
 best_complexity <- select_best(tune_res_white)
 
 wclass_tree_final <- finalize_workflow(wclass_tree_wf, best_complexity)
 
 wclass_tree_final_fit <- fit(wclass_tree_final, data = white_train)
 
-wclass_tree_final_fit %>%
+wDecisionTree <- wclass_tree_final_fit %>%
   extract_fit_engine() %>%
   rpart.plot()
 
 # augmented on training 
-augment(wclass_tree_final_fit, new_data = white_train) %>%
+wDecisionTreeAcc <- augment(wclass_tree_final_fit, new_data = white_train) %>%
   accuracy(truth = quality, estimate = .pred_class)
 
-augment(wclass_tree_final_fit, new_data = white_train) %>%
+wDecisionTreeConfMatrix <- augment(wclass_tree_final_fit, new_data = white_train) %>%
   conf_mat(truth = quality, estimate = .pred_class)
 
 # augmented on testing 
-augment(wclass_tree_final_fit, new_data = white_test) %>%
+wDecisionTreeAccTest <-augment(wclass_tree_final_fit, new_data = white_test) %>%
   conf_mat(truth = quality, estimate = .pred_class) 
 
-augment(wclass_tree_final_fit, new_data = white_test) %>%
+wDecisionTreeConfMatrixTest <-augment(wclass_tree_final_fit, new_data = white_test) %>%
   accuracy(truth = quality, estimate = .pred_class)
+```
+
+```{r decision tree white LOAD}
+# JUST LOAD IN INFO WITH THIS RATHER THAN RERUNNING 
+load(file = "WhiteWineDecisionTree.rda")
 ```
 
 ```{r decision tree red}
@@ -579,9 +576,12 @@ augment(rclass_tree_final_fit, new_data = red_test) %>%
   accuracy(truth = quality, estimate = .pred_class)
 ```
 
+```{r decision tree red LOAD}
+# JUST LOAD IN INFO WITH THIS RATHER THAN RERUNNING 
+load(file = "RedWineDecisionTree.rda")
+```
 
 ```{r random forest white }
-
 # setting random forest model up
 wrandfor <- rand_forest() %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
 
@@ -600,7 +600,8 @@ wtune_res_randfor <- tune_grid(
   metric = metric_set(accuracy)
 )
 
-autoplot(wtune_res_randfor)
+wAutoPlotRF <- autoplot(wtune_res_randfor)
+
 
 # collecting metrics to find best mean
 wbest_rocauc1 <-collect_metrics(wtune_res_randfor) %>% arrange(desc(mean))
@@ -608,13 +609,18 @@ wbest_rocauc1 <-collect_metrics(wtune_res_randfor) %>% arrange(desc(mean))
 best_metric <- select_best(wtune_res_randfor)
 
 wrandfor_final <- rand_forest(mtry = 2, trees = 17, min_n = 30) %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
-wrandfor_fit_final <- fit(wrandfor_final, data = white_train)
 
-vip(wrandfor_fit_final)
+wrandfor_fit_final <- fit(wrandfor_final, formula = quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train)
+
+wVIP <- vip(wrandfor_fit_final)
+```
+
+```{r random forest white LOAD}
+# JUST LOAD IN INFO WITH THIS RATHER THAN RERUNNING 
+load(file = "WhiteWineRandomForest.rda")
 ```
 
 ```{r random forest red}
-
 # setting random forest model up
 rrandfor <- rand_forest() %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
 
@@ -629,21 +635,25 @@ param_grid2 <- grid_regular(mtry(range = c(1,9)), trees(range = c(15,17)), min_n
 rtune_res_randfor <- tune_grid(
   rrandfor_wf,
   resamples = red_fold,
-  grid = param_grid2,
-  metric = metric_set(accuracy)
+  grid = param_grid2
 )
 
-autoplot(rtune_res_randfor)
+rAutoPlotRF <- autoplot(rtune_res_randfor)
 
 # collecting metrics to find best mean
 rbest_rocauc1 <- collect_metrics(rtune_res_randfor) %>% arrange(desc(mean))
-print(best_rocauc1)
+print(rbest_rocauc1)
 best_metric <- select_best(rtune_res_randfor)
 
-rrandfor_final <- rand_forest(mtry = 2, trees = 17, min_n = 30) %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
-wrandfor_fit_final <- fit(wrandfor_final, data = white_train)
+rrandfor_final <- rand_forest(mtry = 7, trees = 17, min_n = 32) %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
+rrandfor_fit_final <- fit(rrandfor_final, formula = quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol,data = red_train)
 
-vip(wrandfor_fit_final)
+rVIP <- vip(rrandfor_fit_final)
+```
+
+```{r random forest red LOAD}
+# JUST LOAD IN INFO WITH THIS RATHER THAN RERUNNING 
+load(file = "RedWineRandomForest.rda")
 ```
 
 ```{r boosted tree white}
@@ -668,6 +678,11 @@ wbest_rocauc2 <- collect_metrics(wtune_res_boosted) %>% arrange(desc(mean))
 print(best_rocauc2)
 ```
 
+```{r boosted tree white LOAD}
+# JUST LOAD IN INFO WITH THIS RATHER THAN RERUNNING 
+load(file = "WhiteWineBoostedTrees.rda")
+```
+
 ```{r boosted tree red}
 rboost_spec <-  boost_tree(tree_depth = 5) %>% 
   set_engine("xgboost") %>% 
@@ -686,12 +701,34 @@ rtune_res_boosted <- tune_grid(
   grid = param_grid4
 )
 autoplot(rtune_res_boosted)
+
 wbest_rocauc2 <- collect_metrics(rtune_res_boosted) %>% arrange(desc(mean))
 print(wbest_rocauc2)
 ```
 
+```{r random forest red LOAD}
+# JUST LOAD IN INFO WITH THIS RATHER THAN RERUNNING 
+load(file = "RedWineBoostedTrees.rda")
+```
+
 ```{r best roc}
 # augment all the rocs from decision, randforest, boosted --> see which one has the best --> fit best on testing 
-best_roc_table <- rbind(best_rocauc[1,c(2,4)], best_rocauc1[1,c(4,6)], best_rocauc2[1,c(2,4)] )
-best_roc_table
+# WHITE
+wbest_rocauc
+wbest_rocauc1
+wbest_rocauc2
+wbest_roc_table <- rbind(wbest_rocauc[1,c(2,4)], wbest_rocauc1[1,c(4,6)], wbest_rocauc2[1,c(2,4)] ) %>% mutate(model_type = c("Decision Tree", "Random Forest", "Boosted Trees"))
+wbest_roc_table
+
+# We will test our model using Boosted Trees and Random Forest 
+
+#RED
+rbest_rocauc
+rbest_rocauc1
+rbest_rocauc2
+rbest_roc_table <- rbind(rbest_rocauc[1,c(2,4)], rbest_rocauc1[1,c(4,6)], rbest_rocauc2[1,c(2,4)] ) %>% mutate(model_type = c("Decision Tree", "Random Forest", "Boosted Trees"))
+rbest_roc_table
+
+# We will test our model using Boosted Trees and Random Forest 
+
 ```
