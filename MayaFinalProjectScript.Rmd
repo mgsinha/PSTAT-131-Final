@@ -362,4 +362,60 @@ collect_metrics(rlda_fit)
 
 ```
 
+```{r white; ridge no tuning}
+ridge_spec <- linear_reg(mixture = 0, penalty = 0) %>%
+  set_mode("regression") %>%
+  set_engine("glmnet")
+
+ridge_fit <- fit(ridge_spec, quality ~ ., data = white_train)
+tidy(ridge_fit, penalty = 0)
+
+ridge_fit %>%
+  extract_fit_engine() %>%
+  plot(xvar = "lambda")
+
+predict(ridge_fit, new_data = white_train, penalty = 0)
+
+```
+
+```{r white; ridge with tuning}
+ridge_recipe <- 
+  recipe(formula = quality ~ ., data = white_train) %>% 
+  step_novel(all_nominal_predictors()) %>% 
+  step_dummy(all_nominal_predictors()) %>% 
+  step_zv(all_predictors()) %>% 
+  step_normalize(all_predictors())
+
+ridge_spec <- 
+  linear_reg(penalty = tune(), mixture = 0) %>% 
+  set_mode("regression") %>% 
+  set_engine("glmnet")
+
+ridge_workflow <- workflow() %>% 
+  add_recipe(ridge_recipe) %>% 
+  add_model(ridge_spec)
+
+penalty_grid <- grid_regular(penalty(range = c(-5, 5)), levels = 50)
+
+tune_res <- tune_grid(
+  ridge_workflow,
+  resamples = white_fold, 
+  grid = penalty_grid
+)
+
+tune_res
+
+autoplot(tune_res)
+
+collect_metrics(tune_res)
+
+best_penalty <- select_best(tune_res, metric = "rsq")
+
+ridge_final <- finalize_workflow(ridge_workflow, best_penalty)
+
+ridge_final_fit <- fit(ridge_final, data = white_train)
+
+augment(ridge_final_fit, new_data = white_test) %>%
+  rsq(truth = quality, estimate = .pred)
+```
 
