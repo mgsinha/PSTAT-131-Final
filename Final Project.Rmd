@@ -49,7 +49,6 @@ We are interested in conducting analysis on both the white and red wine to asses
 This project uses data on the white and red wine, which records information about the details of the wine. 
 
 ```{r load data, message = FALSE}
-
 white_og <- read.csv("Wine Dataset/winequality-white.csv", sep = ";")
 red_og <- read.csv("Wine Dataset/winequality-red.csv", sep = ";")
 ```
@@ -86,6 +85,7 @@ combinedWine <- rbind(white, red)
 In our data split, we put a proportion of .7 of each original data set into a training data set and a proportion of .3 into the testing data sets, stratifying by quality. In this section, we also folded our data into 5 folds for later cross validation use.
 
 ```{r data split, message = FALSE}
+set.seed(1234)
 white_split <- white %>% 
   initial_split(prop = 0.7, strata = "quality")
 
@@ -195,7 +195,7 @@ ggplot(combinedWine, mapping = aes(x = `citric.acid`, y = quality, fill = qualit
 
 ```
 
-From these boxp lots, we can see that fixed acidity levels are relatively consistent in both red and white wine. Volatile acidity has a  negative correlation with quality in red wine, but relatively consistent averages for each level of wine quality in white wine. Citric acid levels in red wine have a stronger positive correlation than in white wine. In general, we can see that acidity levels fluctuate more in red wine than in white wine.  
+From these box plots, we can see that fixed acidity levels are relatively consistent in both red and white wine. Volatile acidity has a negative correlation with quality in red wine, but relatively consistent averages for each level of wine quality in white wine. Citric acid levels in red wine have a stronger positive correlation than in white wine. In general, we can see that acidity levels fluctuate more in red wine than in white wine.  
 
 Next, let's take a look at dryness which is determined by the predictor density. Based on the correlation matrix and scatter plots, density also interacts with residual sugar and alcohol in white wine and with fixed acidity in red wine. 
 
@@ -295,7 +295,7 @@ wnb_fit_cross <- fit_resamples(wnb_wkflow, white_fold)
 collect_metrics(wnb_fit_cross)
 ```
 
-Through k-fold cross validation, we can see that the linear discriminant analysis model produces a more accurate model than the Naive Bayes model. Thus, we will use linear discriminant analysis on the white wine data set. Now, let's explore how the model performs.
+Through k-fold cross validation, we can see that the linear discriminant analysis model produces a more accurate model than the Naive Bayes model. Thus, we will use linear discriminant analysis on the white wine data set. Now, let's explore how the model performs on our testing data.
 
 ```{r white lda, message=FALSE}
 wlda_model <- discrim_linear() %>% 
@@ -394,12 +394,100 @@ augment(wclass_tree_final_fit, new_data = white_test) %>%
   accuracy(truth = quality, estimate = .pred_class)
 ```
 
+decision tree analysis
+
+Now let's look at the random forest model.
+
 ```{r white random forest, message=FALSE}
+# setting random forest model up
+wrandfor <- rand_forest() %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
+
+wrandfor_wf <- workflow() %>%
+  add_model(wrandfor %>%
+              set_args(mtry = tune(), trees = tune(), min_n = tune())) %>% 
+  add_formula(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol)
+
+# tuning the model to find the best arguments 
+param_grid1 <- grid_regular(mtry(range = c(1,9)), trees(range = c(15,17)), min_n(range = c(30,50)), levels = 8)
+
+wtune_res_randfor <- tune_grid(
+  wrandfor_wf,
+  resamples = white_fold,
+  grid = param_grid1,
+  metric = metric_set(accuracy)
+)
+
+wAutoPlotRF <- autoplot(wtune_res_randfor)
+
+
+# collecting metrics to find best mean
+wbest_rocauc1 <-collect_metrics(wtune_res_randfor) %>% arrange(desc(mean))
+
+wbest_metric1 <- select_best(wtune_res_randfor)
+
+# wrandfor_final <- finalize_workflow(wrandfor_wf, wbest_metric1)
+# wrandfor_fit_final <- fit(wrandfor_final, data = white_train)
+
+wrandfor_final <- rand_forest(mtry = 2, trees = 17, min_n = 30) %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
+wrandfor_fit_final <- fit(wrandfor_final, formula = quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train)
+
+wVIP <- vip(wrandfor_fit_final)
+wVIP
+
+# saving 
+save(wAutoPlotRF, wbest_rocauc1, wrandfor_final, wVIP, wrandfor_fit_final, file = "WhiteWineRandomForest.rda")
+
+#load saved data
+load(file = "WhiteWineRandomForest.rda")
 
 ```
 
-```{r white boosted tree, message=FALSE}
+random forest analysis
 
+Now, let's look at the boosted tree model. 
+
+```{r white boosted tree, message=FALSE}
+wboost_spec <-  boost_tree(tree_depth = 5) %>% 
+  set_engine("xgboost") %>% 
+  set_mode("classification")
+
+wboost_wf <- workflow() %>%
+  add_model(wboost_spec %>%
+              set_args(trees = tune())) %>% 
+  add_formula(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol)
+
+param_grid3 <- grid_regular(trees(range = c(10,2000)), levels = 10)
+
+wtune_res_boosted <- tune_grid(
+  wboost_wf,
+  resamples = white_fold,
+  grid = param_grid3
+)
+
+wBoostedAutoPlot <- autoplot(wtune_res_boosted)
+
+wbest_rocauc2 <- collect_metrics(wtune_res_boosted) %>% arrange(desc(mean))
+print(wbest_rocauc2)
+
+wbest_metric2 <- select_best(wtune_res_boosted)
+print(wbest_metric2)
+
+wboost_final <- boost_tree(tree_depth = 5, trees = 231)%>% 
+  set_engine("xgboost") %>% 
+  set_mode("classification")
+wboost_fit_final <- fit(wboost_final, formula = quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train)
+
+wpredicted <- augment(wboost_fit_final, new_data = white_test) 
+wpredicted %>% roc_auc(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8)
+wBoostedROCCurveTesting <- wpredicted %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+wBoostedConfusionMatrixTesting <- wpredicted %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+wBoostedConfusionMatrixTesting
+
+# saving 
+save(wBoostedAutoPlot, wbest_rocauc2, wboost_final, wboost_fit_final, wpredicted,wBoostedROCCurveTesting,wBoostedConfusionMatrixTesting, file = "WhiteWineBoostedTrees.rda")
+
+#load saved data
+load(file = "RedWineRandomForest.rda")
 ```
 
 ```{r white best fit, message=FALSE}
@@ -537,11 +625,86 @@ augment(rclass_tree_final_fit, new_data = red_test) %>%
 ```
 
 ```{r red random forest,message=FALSE}
+# setting random forest model up
+rrandfor <- rand_forest() %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
 
+rrandfor_wf <- workflow() %>%
+  add_model(rrandfor %>%
+              set_args(mtry = tune(), trees = tune(), min_n = tune())) %>% 
+  add_formula(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol)
+
+# tuning the model to find the best arguments 
+param_grid2 <- grid_regular(mtry(range = c(1,9)), trees(range = c(15,17)), min_n(range = c(30,50)), levels = 8)
+
+rtune_res_randfor <- tune_grid(
+  rrandfor_wf,
+  resamples = red_fold,
+  grid = param_grid2
+)
+
+rAutoPlotRF <- autoplot(rtune_res_randfor)
+
+# collecting metrics to find best mean
+rbest_rocauc1 <- collect_metrics(rtune_res_randfor) %>% arrange(desc(mean))
+print(rbest_rocauc1)
+rbest_metric1 <- select_best(rtune_res_randfor)
+
+rrandfor_final <- rand_forest(mtry = 7, trees = 17, min_n = 32) %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
+rrandfor_fit_final <- fit(rrandfor_final, formula = quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol,data = red_train)
+
+rVIP <- vip(rrandfor_fit_final)
+rVIP
+
+# saving 
+save(rAutoPlotRF, rbest_rocauc1, rrandfor_final, rVIP, rrandfor_fit_final, file = "WhiteWineRandomForest.rda")
+
+#load saved data
+#load()
 ```
 
 ```{r red boosted tree, message=FALSE}
+# Red Boosted Trees 
+rboost_spec <-  boost_tree(tree_depth = 5) %>% 
+  set_engine("xgboost") %>% 
+  set_mode("classification")
 
+rboost_wf <- workflow() %>%
+  add_model(rboost_spec %>%
+              set_args(trees = tune())) %>% 
+  add_formula(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol)
+
+param_grid4 <- grid_regular(trees(range = c(10,2000)), levels = 10)
+
+rtune_res_boosted <- tune_grid(
+  rboost_wf,
+  resamples = red_fold,
+  grid = param_grid4
+)
+rBoostedAutoPlot <- autoplot(rtune_res_boosted)
+rBoostedAutoPlot
+
+rbest_rocauc2 <- collect_metrics(rtune_res_boosted) %>% arrange(desc(mean))
+print(rbest_rocauc2)
+
+rbest_metric2 <- select_best(rtune_res_boosted)
+print(rbest_metric2)
+
+rboost_final <- boost_tree(tree_depth = 5, trees = 231)%>% 
+  set_engine("xgboost") %>% 
+  set_mode("classification")
+rboost_fit_final <- fit(rboost_final, formula = quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train)
+
+rpredicted <- augment(rboost_fit_final, new_data = red_test) 
+rpredicted %>% roc_auc(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8)
+rBoostedROCCurveTesting <- rpredicted %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+rBoostedConfusionMatrixTesting <- rpredicted %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+rBoostedConfusionMatrixTesting
+rBoostedROCCurveTesting
+
+# saving 
+save(rBoostedAutoPlot, rbest_rocauc2, rboost_final, rboost_fit_final, rpredicted,rBoostedROCCurveTesting,rBoostedConfusionMatrixTesting, file = "RedWineBoostedTrees.rda")
+
+#load()
 ```
 
 ```{r red best fit, message=FALSE}

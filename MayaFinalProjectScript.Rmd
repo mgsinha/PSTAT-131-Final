@@ -419,3 +419,18 @@ augment(ridge_final_fit, new_data = white_test) %>%
   rsq(truth = quality, estimate = .pred)
 ```
 
+```{r best fit}
+#add lda metric
+best_roc_table <- rbind(best_tree_roc[1,c(2,4)], best_rf_roc[1,c(4,6)], best_bt_roc[1,c(2,4)] )
+best_roc_table 
+
+best <-  select_best(rf_tune_res, metric = "roc_auc")
+final_wf <- finalize_workflow(rf_wf, best)
+final_fit_test <- fit(final_wf, data = pokemon_test)
+
+predicted <- augment(final_fit_test, new_data = pokemon_test) 
+predicted %>% roc_auc(type_1, .pred_Bug, .pred_Fire, .pred_Grass, .pred_Normal, .pred_Water, .pred_Psychic) 
+
+predicted %>% conf_mat(truth = type_1, estimate = .pred_class) %>% autoplot(type = "heatmap")
+```
+
