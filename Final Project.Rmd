@@ -58,7 +58,7 @@ red_og <- read.csv("Wine Dataset/winequality-red.csv", sep = ";")
 
 To clean our data, we clean the column names, change quality into a factor so we can analyze it with classification models, and add the type "White" or "Red" to each data set. We removed any rows with a quality value of 9 because there are too few instances, and thus, it inhibits our models from performing correctly later on. We also create a combined data frame with both values from white and red wine to see if there are significant differences between red and white evaluations for quality.  
 
-```{r data cleaning}
+```{r data cleaning, include=FALSE}
 # Make Column Names Clean 
 white_og %>% clean_names()
 red_og %>% clean_names()
@@ -118,7 +118,7 @@ ggplot(combinedWine_og, aes(quality)) + geom_bar(color = "black", fill = "pink")
 
 We can see that it is normally distributed, meaning that most wine has a quality value of 5 or 6, with few exceptionally good wines having a value of 8 or 9, and low quality wines having a quality value of 3. 
 
-Next, we look at the correlation matrices for white and red wine separately to determine which predictors are correlated and thus, which predictors we need to interact in our modelling recipes. 
+Next, we look at the correlation matrices for white and red wine separately to determine which predictors are correlated. 
 
 ```{r correlation matrix}
 white %>% 
@@ -138,9 +138,9 @@ In the white wine correlation matrix, density and residual sugar; and density an
 
 In the red wine correlation matrix, citric acid and fixed acidity; density and fixed acidity; citric acid and volatile acidity; pH and fixed acidity; and free sulfur dioxide and total sulfur dioxide are highly correlated with each other.  
 
-To visualize and validate these correlations, let's take a look at the scaled scatter plot of each.
+To visualize and validate these correlations, let's take a look at the scaled scatter plot of each predictor plotted against its correlated counterpart.
 
-```{r white wine scatter plots, message=FALSE}
+```{r white wine scatter plots, message=FALSE, warning = FALSE}
 
 # scaled datasets 
 scaled_white = as.data.frame(scale(select(white, c(-quality,-type))))
@@ -158,7 +158,7 @@ wfsdtsd = ggplot(scaled_white, aes(x = free.sulfur.dioxide, y = total.sulfur.dio
 ggarrange(wrsd, wad, wfsdtsd + rremove("x.text"), ncol = 3, nrow = 1) %>% annotate_figure(top = text_grob("White Wine Scaled"))
 ```
 
-```{r red wine scatter plots}
+```{r red wine scatter plots, message= FALSE, warning = FALSE}
 # scaled red volatile acidity versus citric acid
 rvaca = ggplot(scaled_red, aes(x = volatile.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Volatile Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Volatile Acidity Versus Citric Acid") + theme(plot.title = element_text(size = 5))
 
@@ -178,7 +178,7 @@ ggarrange(rvaca, rfaca, rfap, rfad, fsdtsd, ncol = 3, nrow = 2) %>% annotate_fig
 
 ```
 
-Based on the scatter plots, we can visualize the correlations between the predictors. For example, for white wine, density has a strong positive correlation with residual sugar and a moderate negative correlation with alcohol. Through these scatter plots, we confirm the existence of correlations predicted by our initial correlation matrix and therefore will take these interactions into account for our modeling recipes for white and red wine. 
+Based on the scatter plots, we can visualize the correlations between the predictors. For example, for white wine, density has a strong positive correlation with residual sugar and a moderate negative correlation with alcohol. Through these scatter plots, we confirm the existence of correlations predicted by our initial correlation matrix. 
 
 Now, we can take a look at the box plots for several of our predictors to see the ways that they interact with wine quality, isolated from the other predictors. First, we will visualize acidity levels which can be measured through fixed acidity, volatile acidity, and citric acid levels. As shown above in the scatter plots, these three predictors are highly correlated with each other in red wine. 
 
@@ -197,7 +197,7 @@ ggplot(combinedWine, mapping = aes(x = `citric.acid`, y = quality, fill = qualit
 
 From these box plots, we can see that fixed acidity levels are relatively consistent in both red and white wine. Volatile acidity has a negative correlation with quality in red wine, but relatively consistent averages for each level of wine quality in white wine. Citric acid levels in red wine have a stronger positive correlation than in white wine. In general, we can see that acidity levels fluctuate more in red wine than in white wine.  
 
-Next, let's take a look at dryness which is determined by the predictor density. Based on the correlation matrix and scatter plots, density also interacts with residual sugar and alcohol in white wine and with fixed acidity in red wine. 
+Next, let's take a look at dryness which is determined by the predictor density. Based on the correlation matrix and scatter plots, density also is correlated with residual sugar and alcohol in white wine and with fixed acidity in red wine. 
 
 ```{r eda box plot density, message=FALSE}
 # density
@@ -253,7 +253,7 @@ concluding sentence
 
 ## Model Fitting
 
-We will be fitting linear discriminant analysis, naive Bayes, single decision tree, random forest, and boosted tree models and compare accuracy metrics. Then, we will fit the best model to our testing data. First, let's see how the models perform on the white wine data set.
+We will be fitting linear discriminant analysis, naive Bayes, single decision tree, random forest, and boosted tree models and compare accuracy metrics. Then, we will fit the three models with the best `roc_auc` to our testing data. First, let's see how the models perform on the white wine data set.
 
 Based on the correlations between predictors, we interacted those terms in our recipe. The terms we interact are different for white wine and red wine. 
 
