@@ -61,7 +61,7 @@ red_og <- read.csv("Wine Dataset/winequality-red.csv", sep = ";")
 
 ## Data Cleaning
 
-To clean our data, we clean the column names, change quality into a factor so we can analyze it with classification models, and add the type "White" or "Red" to each data set. We removed any rows in the white wine data set with a quality value of 9 because there are too few instances, and thus, it inhibits our models from performing correctly later on. The red wine data set did not have any quality values of 9. We also create a combined data frame with both values from white and red wine to see if there are significant differences between red and white evaluations for quality.
+To clean our data, we clean the column names, change quality into a factor so we can analyze it with classification models, and add a `type` of `White` or `Red` to each data set. We removed any rows in the white wine data set with a quality value of 9 because there are too few instances, and thus, it inhibits our models from performing correctly later on. The red wine data set did not have any quality values of 9. We also create a combined data frame with both values from white and red wine to see if there are significant differences between red and white evaluations for quality.
 
 ```{r data cleaning, include=FALSE}
 # Make Column Names Clean 
@@ -156,40 +156,35 @@ scaled_white = as.data.frame(scale(select(white, c(-quality,-type))))
 scaled_red = as.data.frame(scale(select(red, c(-quality,-type))))
 
 # scaled white residual sugar versus density 
-wrsd = ggplot(scaled_white, aes(x = residual.sugar, y = density)) + geom_point()+scale_x_continuous(name = "Residual Sugar") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)+ ggtitle(" Residual Sugar Versus Density") + theme(plot.title = element_text(size = 5))
+ggplot(scaled_white, aes(x = residual.sugar, y = density)) + geom_point()+scale_x_continuous(name = "Residual Sugar") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)+ ggtitle(" Residual Sugar Versus Density") + theme(plot.title = element_text(size = 5))
 
 # scaled white alcohol versus density 
-wad = ggplot(scaled_white, aes(x = alcohol, y = density)) + geom_point()+scale_x_continuous(name = "Alcohol") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Alcohol Versus Density") + theme(plot.title = element_text(size = 5))
+ggplot(scaled_white, aes(x = alcohol, y = density)) + geom_point()+scale_x_continuous(name = "Alcohol") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Alcohol Versus Density") + theme(plot.title = element_text(size = 5))
 
 # scaled white free sulfur dioxide versus total sulfur dioxide
-wfsdtsd = ggplot(scaled_white, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxide") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Free Sulfur Versus Total Sulfur Dioxide") + theme(plot.title = element_text(size = 5))
-
-ggarrange(wrsd, wad, wfsdtsd + rremove("x.text"), ncol = 3, nrow = 1) %>% annotate_figure(top = text_grob("White Wine Scaled"))
+ggplot(scaled_white, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxide") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Free Sulfur Versus Total Sulfur Dioxide") + theme(plot.title = element_text(size = 5))
 ```
 
 #### Red
 
 ```{r red wine scatter plots, message= FALSE, warning = FALSE}
 # scaled red volatile acidity versus citric acid
-rvaca = ggplot(scaled_red, aes(x = volatile.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Volatile Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Volatile Acidity Versus Citric Acid") + theme(plot.title = element_text(size = 5))
+ggplot(scaled_red, aes(x = volatile.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Volatile Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Volatile Acidity Versus Citric Acid") + theme(plot.title = element_text(size = 5))
 
 # scaled red fixed acidity versus citric acid 
-rfaca = ggplot(scaled_red, aes(x = fixed.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus Citric Acid") + theme(plot.title = element_text(size = 5))
+ggplot(scaled_red, aes(x = fixed.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus Citric Acid") + theme(plot.title = element_text(size = 5))
 
 # scaled red fixed acidity versus pH
-rfap = ggplot(scaled_red, aes(x = fixed.acidity, y = pH)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "pH") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus pH") + theme(plot.title = element_text(size = 5))
+ggplot(scaled_red, aes(x = fixed.acidity, y = pH)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "pH") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus pH") + theme(plot.title = element_text(size = 5))
 
 # scaled red fixed acidity versus density
-rfad = ggplot(scaled_red, aes(x = fixed.acidity, y = density)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus Density") + theme(plot.title = element_text(size = 5))
+ggplot(scaled_red, aes(x = fixed.acidity, y = density)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus Density") + theme(plot.title = element_text(size = 5))
 
 # scaled red free sulfur dioxide versus total sulfur dioxide
-fsdtsd = ggplot(scaled_red, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxide") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Free Sulfur Dioxide Versus Total Sulfur Dioxide") + theme(plot.title = element_text(size = 5))
-
-ggarrange(rvaca, rfaca, rfap, rfad, fsdtsd, ncol = 3, nrow = 2) %>% annotate_figure(top = text_grob("Red Wine Scaled"))
-
+ggplot(scaled_red, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxide") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Free Sulfur Dioxide Versus Total Sulfur Dioxide") + theme(plot.title = element_text(size = 5))
 ```
 
-#### {.unnumbered}
+###  {.unnumbered}
 
 Based on the scatter plots, we can visualize the correlations between the predictors. For example, for white wine, density has a strong positive correlation with residual sugar and a moderate negative correlation with alcohol. Through these scatter plots, we confirm the existence of correlations predicted by our initial correlation matrix.
 
@@ -277,7 +272,7 @@ red_recipe <- recipe(quality ~ volatile.acidity + fixed.acidity + citric.acid + 
 #%>% step_interact(~ citric.acid:volatile.acidity + free.sulfur.dioxide:total.sulfur.dioxide)
 ```
 
-Let's first explore linear discriminant analysis and naive Bayes classification through k-fold cross validation. 
+Let's first explore linear discriminant analysis and naive Bayes classification through k-fold cross validation.
 
 ```{r white k-fold lda, message=FALSE, class.source = 'fold-show'}
 #lda model using cross validation
@@ -372,7 +367,6 @@ wclass_tree_fit %>%
   extract_fit_engine() %>%
   rpart.plot()
 ```
-
 
 ```{r}
 # augmented on training 
