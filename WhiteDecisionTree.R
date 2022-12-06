@@ -60,11 +60,17 @@ wDecisionTree <- wclass_tree_final_fit %>%
   rpart.plot(main="White Wine Decision Tree")
 
 # augmented on training 
-wDecisionTreeAcc <- augment(wclass_tree_final_fit, new_data = white_train) %>%
-  accuracy(truth = quality, estimate = .pred_class)
+wdectree_pred <- augment(wclass_tree_final_fit, new_data = white_train) 
+wdectree_acc <- wdectree_pred %>% accuracy(truth = quality, estimate = .pred_class)
+wdectree_rocauc <- wdectree_pred %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Decision Tree Model")
+wdectree_roccurve <- wdectree_pred %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+wdectree_confusionmatrix <- augment(wclass_tree_final_fit, new_data = white_train) %>%
+  conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
 
-wDecisionTreeConfMatrix <- augment(wclass_tree_final_fit, new_data = white_train) %>%
-  conf_mat(truth = quality, estimate = .pred_class)
+print(wdectree_acc)
+print(wdectree_rocauc)
+wdectree_roccurve
+wdectree_confusionmatrix
 
 # augmented on testing 
 wDecisionTreeAccTest <-augment(wclass_tree_final_fit, new_data = white_test) %>%
@@ -74,4 +80,6 @@ wDecisionTreeConfMatrixTest <-augment(wclass_tree_final_fit, new_data = white_te
   accuracy(truth = quality, estimate = .pred_class)
 
 # saving files 
-save(wDecisionTreePre, wDecisionTreeAccPre, wDecisionTreeConfMatrixPre, wAutoPlot, wbest_rocauc, wDecisionTree, wAutoPlot, wDecisionTreeAcc, wDecisionTreeConfMatrix, wDecisionTreeAccTest, wDecisionTreeConfMatrixTest, file = "WhiteWineDecisionTree.rda")
+save(wDecisionTreePre, wDecisionTreeAccPre, wDecisionTreeConfMatrixPre, wAutoPlot, wbest_rocauc, wDecisionTree, wAutoPlot, 
+     wdectree_pred,wdectree_acc, wdectree_rocauc, wdectree_roccurve, wdectree_confusionmatrix,
+     wDecisionTreeAccTest, wDecisionTreeConfMatrixTest, file = "WhiteWineDecisionTree.rda")

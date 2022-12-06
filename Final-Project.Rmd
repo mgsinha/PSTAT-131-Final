@@ -353,6 +353,13 @@ augment(wclass_tree_fit, new_data = white_train) %>%
 augment(wclass_tree_fit, new_data = white_train) %>%
   conf_mat(truth = quality, estimate = .pred_class)
 
+# augmented on testing 
+augment(wclass_tree_fit, new_data = white_test) %>%
+  conf_mat(truth = quality, estimate = .pred_class) 
+
+augment(wclass_tree_fit, new_data = white_test) %>%
+  accuracy(truth = quality, estimate = .pred_class)
+
 # tuning cost complexity 
 wclass_tree_wf<- workflow() %>%
   add_model(wtree_spec_class %>% 
@@ -382,17 +389,18 @@ wclass_tree_final_fit %>%
   rpart.plot()
 
 # augmented on training 
-wdectree_pred <- augment(wclass_tree_final_fit, new_data = white_train) 
-wdectree_acc <- wdectree_pred %>% accuracy(truth = quality, estimate = .pred_class)
-wdectree_rocauc <- wdectree_pred %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Decision Tree Model")
-wdectree_roccurve <- wdectree_pred %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
-wdectree_confusionmatrix <- augment(wclass_tree_final_fit, new_data = white_train) %>%
-  conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+augment(wclass_tree_final_fit, new_data = white_train) %>%
+  accuracy(truth = quality, estimate = .pred_class)
 
-print(wdectree_acc)
-print(wdectree_rocauc)
-wdectree_roccurve
-wdectree_confusionmatrix
+augment(wclass_tree_final_fit, new_data = white_train) %>%
+  conf_mat(truth = quality, estimate = .pred_class)
+
+# augmented on testing 
+augment(wclass_tree_final_fit, new_data = white_test) %>%
+  conf_mat(truth = quality, estimate = .pred_class) 
+
+augment(wclass_tree_final_fit, new_data = white_test) %>%
+  accuracy(truth = quality, estimate = .pred_class)
 ```
 
 decision tree analysis
@@ -400,9 +408,6 @@ decision tree analysis
 Now let's look at the random forest model.
 
 ```{r white random forest, message=FALSE}
-#load saved data
-load(file = "WhiteWineRandomForest.rda")
-
 # setting random forest model up
 wrandfor <- rand_forest() %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
 
@@ -423,29 +428,27 @@ wtune_res_randfor <- tune_grid(
 
 wAutoPlotRF <- autoplot(wtune_res_randfor)
 
+
 # collecting metrics to find best mean
-wbest_rocauc1 <- collect_metrics(wtune_res_randfor) %>% arrange(desc(mean))
+wbest_rocauc1 <-collect_metrics(wtune_res_randfor) %>% arrange(desc(mean))
+
 wbest_metric1 <- select_best(wtune_res_randfor)
+
+# wrandfor_final <- finalize_workflow(wrandfor_wf, wbest_metric1)
+# wrandfor_fit_final <- fit(wrandfor_final, data = white_train)
 
 wrandfor_final <- rand_forest(mtry = 2, trees = 17, min_n = 30) %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
 wrandfor_fit_final <- fit(wrandfor_final, formula = quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train)
 
-# variance importance plot
 wVIP <- vip(wrandfor_fit_final)
 wVIP
 
-# extracting the metrics 
-wrandfor_pred <- augment(wrandfor_fit_final, new_data = white_train) 
-wrandfor_acc <- wrandfor_pred %>% accuracy(truth = quality, estimate = .pred_class) %>% mutate(model_type = "White Random Forest Model")
-wrandfor_rocauc <- wrandfor_pred %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Random Forest Model")
-wrandfor_roccurve <- wrandfor_pred %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
-wrandfor_confusionmatrix <- augment(wrandfor_fit_final, new_data = white_train) %>%
-  conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+# saving 
+save(wAutoPlotRF, wbest_rocauc1, wrandfor_final, wVIP, wrandfor_fit_final, file = "WhiteWineRandomForest.rda")
 
-print(wrandfor_acc)
-print(wrandfor_rocauc)
-wrandfor_roccurve
-wrandfor_confusionmatrix
+#load saved data
+load(file = "WhiteWineRandomForest.rda")
+
 ```
 
 random forest analysis
@@ -453,9 +456,6 @@ random forest analysis
 Now, let's look at the boosted tree model. 
 
 ```{r white boosted tree, message=FALSE}
-#load saved data
-load(file = "RedWineRandomForest.rda")
-
 wboost_spec <-  boost_tree(tree_depth = 5) %>% 
   set_engine("xgboost") %>% 
   set_mode("classification")
@@ -477,6 +477,7 @@ wBoostedAutoPlot <- autoplot(wtune_res_boosted)
 
 wbest_rocauc2 <- collect_metrics(wtune_res_boosted) %>% arrange(desc(mean))
 print(wbest_rocauc2)
+
 wbest_metric2 <- select_best(wtune_res_boosted)
 print(wbest_metric2)
 
@@ -491,7 +492,11 @@ wBoostedROCCurveTesting <- wpredicted %>% roc_curve(quality, .pred_3,.pred_4, .p
 wBoostedConfusionMatrixTesting <- wpredicted %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
 wBoostedConfusionMatrixTesting
 
+# saving 
+save(wBoostedAutoPlot, wbest_rocauc2, wboost_final, wboost_fit_final, wpredicted,wBoostedROCCurveTesting,wBoostedConfusionMatrixTesting, file = "WhiteWineBoostedTrees.rda")
 
+#load saved data
+load(file = "RedWineRandomForest.rda")
 ```
 
 ```{r white best fit, message=FALSE}
@@ -534,31 +539,26 @@ collect_metrics(rnb_fit_cross)
 Through k-fold cross validation, we can see that the linear discriminant analysis model produces a more accurate model than the Naive Bayes model. Thus, we will also use linear discriminant analysis on the red wine data set. 
 
 ```{r red lda, message=FALSE}
-# fitting the model
 rlda_model <- discrim_linear() %>% 
   set_mode("classification") %>% 
   set_engine("MASS") 
 
-# creating the workflow
 rlda_wkflow <- workflow() %>% 
   add_model(rlda_model) %>% 
   add_recipe(red_recipe)
 
-# fitting the model to training data
 rlda_fit <- fit(rlda_wkflow, red_train)
 
-# now using that fit to test the model on the testing data
 rlda_res <- predict(rlda_fit, new_data = red_test %>%  select(-quality), type = "class" ) 
+
 rlda_res <- bind_cols(rlda_res, red_test %>%  select(quality)) 
 
-# returning our predictions and visualizations 
 rlda_pred <- augment(rlda_fit, new_data = red_test)
 rlda_acc <- rlda_pred %>% accuracy(truth = quality, estimate = .pred_class)
 rlda_rocauc <- rlda_pred %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8)%>% mutate(model_type = "Red LDA Model")
 rlda_roccurve <- rlda_pred %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
 rlda_confusionmatrix <- rlda_pred %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
 
-# predictions, accuracy, roc auc, roc curve, confusion matrix 
 print(rlda_acc)
 print(rlda_res)
 print(rlda_rocauc)

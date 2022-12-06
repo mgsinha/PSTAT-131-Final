@@ -29,12 +29,20 @@ rboost_final <- boost_tree(tree_depth = 5, trees = 231)%>%
   set_mode("classification")
 rboost_fit_final <- fit(rboost_final, formula = quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train)
 
-rpredicted <- augment(rboost_fit_final, new_data = red_test) 
-rpredicted %>% roc_auc(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8)
-rBoostedROCCurveTesting <- rpredicted %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
-rBoostedConfusionMatrixTesting <- rpredicted %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
-rBoostedConfusionMatrixTesting
-rBoostedROCCurveTesting
+rpredicted <- augment(rboost_fit_final, new_data = red_train) 
+rboosted_acc <- rpredicted %>% accuracy(truth = quality, estimate = .pred_class) %>% mutate(model_type = "White Boosted Trees Model")
+rboosted_rocauc <-  rpredicted %>% roc_auc(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Boosted Trees Model")
+rBoostedROCCurve <- rpredicted %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+rBoostedConfusionMatrix <- rpredicted %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+
+rpredictedtest <- augment(rboost_fit_final, new_data = red_test) 
+rboosted_acc_test <- rpredictedtest %>% accuracy(truth = quality, estimate = .pred_class) %>% mutate(model_type = "White Boosted Trees Model")
+rboosted_rocauc_test <- rpredictedtest %>% roc_auc(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Boosted Trees Model")
+rBoostedROCCurveTesting <- rpredictedtest %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+rBoostedConfusionMatrixTesting <- rpredictedtest %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+
 # saving 
-save(rBoostedAutoPlot, rbest_rocauc2, rboost_final, rboost_fit_final, rpredicted,rBoostedROCCurveTesting,rBoostedConfusionMatrixTesting, file = "RedWineBoostedTrees.rda")
+save(rBoostedAutoPlot, rbest_rocauc2, rboost_final, rboost_fit_final, rpredicted,rboosted_acc,rboosted_rocauc,
+     rBoostedROCCurve, rBoostedConfusionMatrix, rpredictedtest, rBoostedROCCurveTesting, rboosted_acc_test, rboosted_rocauc_test, 
+     rBoostedConfusionMatrixTesting, file = "RedWineBoostedTrees.rda")
 
