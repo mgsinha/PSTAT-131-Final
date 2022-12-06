@@ -367,20 +367,29 @@ wlda_model <- discrim_linear() %>%
   set_mode("classification") %>% 
   set_engine("MASS") 
 
+# setting up workflow
 wlda_wkflow <- workflow() %>% 
   add_model(wlda_model) %>% 
   add_recipe(white_recipe)
 
+# fitting the model to training data
 wlda_fit <- fit(wlda_wkflow, white_train)
 
+# now testing the model on the testing data 
 wlda_res <- predict(wlda_fit, new_data = white_test %>%  select(-quality), type = "class" ) 
 
 wlda_res <- bind_cols(wlda_res, white_test %>%  select(quality)) 
 
-wlda_acc <- augment(wlda_fit, new_data = white_test) %>% accuracy(truth = quality, estimate = .pred_class) %>% mutate(model_type = "White LDA Model")
+# returning the roc auc, roc auc curves, heatmap 
+wlda_pred <- augment(wlda_fit, new_data = white_test) 
+wlda_rocauc <- wlda_pred %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White LDA Model")
+wlda_roccurve <- wlda_pred %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+wlda_confusionmatrix <- wlda_pred %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
 
 print(wlda_res)
-print(wlda_acc)
+print(wlda_rocauc)
+wlda_roccurve
+wlda_confusionmatrix
 
 # red lda model
 rlda_model <- discrim_linear() %>% 
@@ -397,10 +406,16 @@ rlda_res <- predict(rlda_fit, new_data = red_test %>%  select(-quality), type = 
 
 rlda_res <- bind_cols(rlda_res, red_test %>%  select(quality)) 
 
-rlda_acc <- augment(rlda_fit, new_data = red_test) %>% accuracy(truth = quality, estimate = .pred_class)%>% mutate(model_type = "Red LDA Model")
+# returning the roc auc
+rlda_pred <- augment(rlda_fit, new_data = red_test)
+rlda_rocauc <- rlda_pred %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8)%>% mutate(model_type = "Red LDA Model")
+rlda_roccurve <- rlda_pred %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+rlda_confusionmatrix <- rlda_pred %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
 
 print(rlda_res)
-print(rlda_acc)
+print(rlda_rocauc)
+rlda_roccurve
+rlda_confusionmatrix
 ```
 
 ```{r Naive Bayes model}
@@ -730,5 +745,10 @@ rbest_roc_table <- rbind(rbest_rocauc[1,c(2,4)], rbest_rocauc1[1,c(4,6)], rbest_
 rbest_roc_table
 
 # We will test our model using Boosted Trees and Random Forest 
+
+```
+
+```{r pca with lda and naive bayes}
+
 
 ```
