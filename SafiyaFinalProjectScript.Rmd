@@ -749,6 +749,10 @@ rbest_roc_table
 ```
 
 ```{r pca with lda and naive bayes}
+pca_white = prcomp(select(white, c(-quality,-type)), center = TRUE, scale. = TRUE)
+pca_red = prcomp(select(red, c(-quality,-type)), center = TRUE, scale. = TRUE)
+
+pca_white
 
 
 ```

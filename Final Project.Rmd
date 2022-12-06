@@ -454,7 +454,7 @@ Now, let's look at the boosted tree model.
 
 ```{r white boosted tree, message=FALSE}
 #load saved data
-load(file = "RedWineRandomForest.rda")
+load(file = "WhiteWineBoostedTrees.rda")
 
 wboost_spec <-  boost_tree(tree_depth = 5) %>% 
   set_engine("xgboost") %>% 
@@ -474,27 +474,84 @@ wtune_res_boosted <- tune_grid(
 )
 
 wBoostedAutoPlot <- autoplot(wtune_res_boosted)
+wBoostedAutoPlot
 
 wbest_rocauc2 <- collect_metrics(wtune_res_boosted) %>% arrange(desc(mean))
-print(wbest_rocauc2)
 wbest_metric2 <- select_best(wtune_res_boosted)
 print(wbest_metric2)
 
 wboost_final <- boost_tree(tree_depth = 5, trees = 231)%>% 
   set_engine("xgboost") %>% 
   set_mode("classification")
+
 wboost_fit_final <- fit(wboost_final, formula = quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train)
 
-wpredicted <- augment(wboost_fit_final, new_data = white_test) 
-wpredicted %>% roc_auc(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8)
-wBoostedROCCurveTesting <- wpredicted %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
-wBoostedConfusionMatrixTesting <- wpredicted %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
-wBoostedConfusionMatrixTesting
+# augmenting 
+wpredicted <- augment(wboost_fit_final, new_data = white_train) 
+wboosted_acc <- wpredicted %>% accuracy(truth = quality, estimate = .pred_class) %>% mutate(model_type = "White Boosted Trees Model")
+wboosted_rocauc <-  wpredicted %>% roc_auc(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Boosted Trees Model")
+wBoostedROCCurve <- wpredicted %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+wBoostedConfusionMatrix <- wpredicted %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
 
-
+wpredicted
+wboosted_acc
+wboosted_rocauc
+wBoostedROCCurve
+wBoostedConfusionMatrix
 ```
 
 ```{r white best fit, message=FALSE}
+# augment all the rocs from decision, randforest, boosted --> see which one has the best --> fit best on testing 
+# WHITE
+wbest_rocauc
+wbest_rocauc1
+wbest_rocauc2
+wbest_roc_table <- rbind(wbest_rocauc[1,c(2,4)], wbest_rocauc1[1,c(4,6)], wbest_rocauc2[1,c(2,4)] ) %>% mutate(model_type = c("Decision Tree", "Random Forest", "Boosted Trees"))
+wbest_roc_table
+
+# We will test our model using Boosted Trees and Random Forest 
+
+#RED
+rbest_rocauc
+rbest_rocauc1
+rbest_rocauc2
+rbest_roc_table <- rbind(rbest_rocauc[1,c(2,4)], rbest_rocauc1[1,c(4,6)], rbest_rocauc2[1,c(2,4)] ) %>% mutate(model_type = c("Decision Tree", "Random Forest", "Boosted Trees"))
+rbest_roc_table
+
+# We will test our model using Boosted Trees and Random Forest 
+```
+explain the best ones of the tree type models also mention between lda and naive bayes, lda was better, but we are gonna try using pca first 
+
+```{r pca lda}
+```
+
+```{r test on 3 models (random forest, boosted trees, pca lda)}
+# random forest testing
+wrandfor_pred_test <- augment(wrandfor_fit_final, new_data = white_test) 
+wrandfor_acc_test <- wrandfor_pred_test %>% accuracy(truth = quality, estimate = .pred_class) %>% mutate(model_type = "White Random Forest Model")
+wrandfor_rocauc_test <- wrandfor_pred_test %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Random Forest Model")
+wrandfor_roccurve_test <- wrandfor_pred_test %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+wrandfor_confusionmatrix_test <- augment(wrandfor_fit_final, new_data = white_test) %>%
+  conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+
+print(wrandfor_acc_test)
+print(wrandfor_rocauc_test)
+wrandfor_roccurve_test
+wrandfor_confusionmatrix_test
+
+# boosted trees testing 
+wpredictedtest <- augment(wboost_fit_final, new_data = white_test) 
+wboosted_acc_test <- wpredictedtest %>% accuracy(truth = quality, estimate = .pred_class) %>% mutate(model_type = "White Boosted Trees Model")
+wboosted_rocauc_test <- wpredictedtest %>% roc_auc(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Boosted Trees Model")
+wBoostedROCCurveTesting <- wpredictedtest %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+wBoostedConfusionMatrixTesting <- wpredictedtest %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+
+wpredictedtest
+wboosted_acc_test
+wboosted_rocauc_test
+wBoostedROCCurveTesting
+wBoostedConfusionMatrixTesting
+
 
 ```
 
@@ -711,17 +768,18 @@ rboost_final <- boost_tree(tree_depth = 5, trees = 231)%>%
   set_mode("classification")
 rboost_fit_final <- fit(rboost_final, formula = quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train)
 
-rpredicted <- augment(rboost_fit_final, new_data = red_test) 
-rpredicted %>% roc_auc(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8)
-rBoostedROCCurveTesting <- rpredicted %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
-rBoostedConfusionMatrixTesting <- rpredicted %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
-rBoostedConfusionMatrixTesting
-rBoostedROCCurveTesting
+rpredicted <- augment(rboost_fit_final, new_data = red_train) 
+rboosted_acc <- rpredicted %>% accuracy(truth = quality, estimate = .pred_class) %>% mutate(model_type = "White Boosted Trees Model")
+rboosted_rocauc <-  rpredicted %>% roc_auc(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Boosted Trees Model")
+rBoostedROCCurve <- rpredicted %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+rBoostedConfusionMatrix <- rpredicted %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
 
-# saving 
-save(rBoostedAutoPlot, rbest_rocauc2, rboost_final, rboost_fit_final, rpredicted,rBoostedROCCurveTesting,rBoostedConfusionMatrixTesting, file = "RedWineBoostedTrees.rda")
+rpredictedtest <- augment(rboost_fit_final, new_data = red_test) 
+rboosted_acc_test <- rpredictedtest %>% accuracy(truth = quality, estimate = .pred_class) %>% mutate(model_type = "White Boosted Trees Model")
+rboosted_rocauc_test <- rpredictedtest %>% roc_auc(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Boosted Trees Model")
+rBoostedROCCurveTesting <- rpredictedtest %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+rBoostedConfusionMatrixTesting <- rpredictedtest %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
 
-#load()
 ```
 
 ```{r red best fit, message=FALSE}
