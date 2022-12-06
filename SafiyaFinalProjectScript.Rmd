@@ -748,11 +748,149 @@ rbest_roc_table
 
 ```
 
-```{r pca with lda and naive bayes}
-pca_white = prcomp(select(white, c(-quality,-type)), center = TRUE, scale. = TRUE)
-pca_red = prcomp(select(red, c(-quality,-type)), center = TRUE, scale. = TRUE)
+```{r pca with lda white}
+white_recipe_pca <- recipe(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train) %>% step_dummy(all_nominal_predictors()) %>% step_normalize(all_predictors()) %>% step_pca(all_numeric_predictors(), num_comp = tune())
 
-pca_white
+# column name(s) must match tune() above
+tuneGrid <- expand.grid(num_comp = 1:ncol(white_recipe_pca$template))
 
+# control tune_grid() process below
+trControl <- control_grid(verbose = TRUE, allow_par = FALSE)
 
+wlda_pca_wkflow <- workflow() %>% 
+  add_model(wlda_model) %>% 
+  add_recipe(white_recipe_pca)
+
+pca_lda_fit <- wlda_pca_wkflow %>%
+  tune_grid(resamples = white_fold,
+            grid = tuneGrid,
+            metrics = metric_set(accuracy),
+            control = trControl)
+
+pca_lda_metrics <- pca_lda_fit %>% collect_metrics()
+
+ggplot(pca_lda_metrics, aes(x = num_comp, y = mean)) +
+  geom_line(color = "#3E4A89FF", linewidth = 2, alpha = 0.6) +
+  scale_x_continuous(breaks = 1:ncol(white_recipe_pca$template)) +
+  facet_wrap(~.metric) +
+  theme_bw()
+
+pca_lda_fit %>% show_best(metric = "accuracy")
+
+(bestTune <- pca_lda_fit %>% select_by_one_std_err(num_comp, metric = "accuracy"))
+
+wlda_pca_wkflow_final <- wlda_pca_wkflow %>% finalize_workflow(bestTune)
+
+fit_final <- wlda_pca_wkflow_final %>% fit(white_train)
+
+white.PCALDA <- tibble(white_train,
+       predict(fit_final, new_data = white_train, type = "class"), # predicted class
+       predict(fit_final, new_data = white_train, type = "prob"), # posterior prob. for classes
+       as_tibble(predict(fit_final, new_data = white_train, type = "raw")$x)) # LD scores
+white.PCALDA
+
+# plot
+ggplot(white.PCALDA, aes(x = LD1, y = LD2)) +
+  geom_point(aes(color = quality, shape = .pred_class)) + 
+  theme_bw() +
+  ggtitle("PCA-LDA (DAPC) on White Wine Training dataset, using 9 PC")
+
+#augmented on training 
+pcalda_fit <- augment(fit_final, new_data = white_train) 
+pcalda_acc <- pcalda_fit %>% accuracy(truth = quality, estimate = .pred_class)
+pcalda_rocauc <- pcalda_fit %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Wine LDA Model using PCA ")
+pcalda_roccurve <- pcalda_fit %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+pcalda_confusionmatrix <- pcalda_fit %>%
+  conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+
+pcalda_acc
+pcalda_rocauc
+pcalda_roccurve
+pcalda_confusionmatrix
+
+#augmented on testing
+pcalda_fit_test <- augment(fit_final, new_data = white_test) 
+pcalda_test_acc <- pcalda_fit_test %>% accuracy(truth = quality, estimate = .pred_class)
+pcalda_test_rocauc <- pcalda_fit_test %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Wine LDA Model using PCA")
+pcalda_test_roccurve <- pcalda_fit_test %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+pcalda_test_confusionmatrix <- pcalda_fit_test %>%
+  conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+
+pcalda_test_acc
+pcalda_test_rocauc
+pcalda_test_roccurve
+pcalda_test_confusionmatrix
+```
+
+```{r pca with lda red}
+red_recipe_pca <- recipe(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train) %>% step_dummy(all_nominal_predictors()) %>% step_normalize(all_predictors()) %>% step_pca(all_numeric_predictors(), num_comp = tune())
+
+# column name(s) must match tune() above
+tuneGrid <- expand.grid(num_comp = 1:ncol(red_recipe_pca$template))
+
+# control tune_grid() process below
+trControl <- control_grid(verbose = TRUE, allow_par = FALSE)
+
+rlda_pca_wkflow <- workflow() %>% 
+  add_model(rlda_model) %>% 
+  add_recipe(red_recipe_pca)
+
+rpca_lda_fit <- rlda_pca_wkflow %>%
+  tune_grid(resamples = red_fold,
+            grid = tuneGrid,
+            metrics = metric_set(accuracy),
+            control = trControl)
+
+rpca_lda_metrics <- rpca_lda_fit %>% collect_metrics()
+
+ggplot(rpca_lda_metrics, aes(x = num_comp, y = mean)) +
+  geom_line(color = "#3E4A89FF", linewidth = 2, alpha = 0.6) +
+  scale_x_continuous(breaks = 1:ncol(red_recipe_pca$template)) +
+  facet_wrap(~.metric) +
+  theme_bw()
+
+rpca_lda_fit %>% show_best(metric = "accuracy")
+
+(bestTune <- rpca_lda_fit %>% select_by_one_std_err(num_comp, metric = "accuracy"))
+
+rlda_pca_wkflow_final <- rlda_pca_wkflow %>% finalize_workflow(bestTune)
+
+rfit_final <- rlda_pca_wkflow_final %>% fit(red_train)
+
+red.PCALDA <- tibble(red_train,
+       predict(rfit_final, new_data =red_train, type = "class"), # predicted class
+       predict(rfit_final, new_data = red_train, type = "prob"), # posterior prob. for classes
+       as_tibble(predict(rfit_final, new_data = red_train, type = "raw")$x)) # LD scores
+
+# plot
+ggplot(red.PCALDA, aes(x = LD1, y = LD2)) +
+  geom_point(aes(color = quality, shape = .pred_class)) + 
+  theme_bw() +
+  ggtitle("PCA-LDA (DAPC) on Red Wine Training dataset, using 9 PC")
+
+#augmented on training 
+rpcalda_fit <- augment(rfit_final, new_data = red_train) 
+rpcalda_acc <- rpcalda_fit %>% accuracy(truth = quality, estimate = .pred_class)
+rpcalda_rocauc <- rpcalda_fit %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Wine LDA Model using PCA ")
+rpcalda_roccurve <- rpcalda_fit %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+rpcalda_confusionmatrix <- rpcalda_fit %>%
+  conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+
+rpcalda_acc
+rpcalda_rocauc
+rpcalda_roccurve
+rpcalda_confusionmatrix
+
+#augmented on testing
+rpcalda_fit_test <- augment(rfit_final, new_data = red_test) 
+rpcalda_test_acc <- rpcalda_fit_test %>% accuracy(truth = quality, estimate = .pred_class)
+rpcalda_test_rocauc <- rpcalda_fit_test %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "Red Wine LDA Model using PCA")
+rpcalda_test_roccurve <- rpcalda_fit_test %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+rpcalda_test_confusionmatrix <- rpcalda_fit_test %>%
+  conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+
+rpcalda_test_acc
+rpcalda_test_rocauc
+rpcalda_test_roccurve
+rpcalda_test_confusionmatrix
 ```
