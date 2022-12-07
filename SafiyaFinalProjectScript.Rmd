@@ -28,6 +28,26 @@ library(janitor)
 library(ggpubr)
 
 tidymodels_prefer()
+
+# LDA 
+load("WhiteLDA.rda")
+load("RedLDA.rda")
+
+# LDA with PCA
+load("WhiteLDAPCA.rda")
+load("RedLDAPCA.rda")
+
+# Decision Tree
+load("WhiteWineDecisionTree.rda")
+load("RedWineDecisionTree.rda")
+
+# Random Forest 
+load("WhiteWineRandomForest.rda")
+load("RedWineRandomForest.rda")
+
+# Boosted Trees
+load("WhiteWineBoostedTrees.rda")
+load("RedWineBoostedTrees.rda")
 ```
 
 ## Overview of Data Set

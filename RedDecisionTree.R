@@ -62,20 +62,23 @@ rDecisionTree <- rclass_tree_final_fit %>%
   rpart.plot(main = "Red Wine Decision Tree")
 
 # augmented on training 
+rdectree_pred <- augment(rclass_tree_final_fit, new_data = white_train) 
+rdectree_rocauc <- rdectree_pred %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Decision Tree Model")
+rdectree_roccurve <- rdectree_pred %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
 rDecisionTreeAcc <- augment(rclass_tree_final_fit, new_data = red_train) %>%
   accuracy(truth = quality, estimate = .pred_class)
-
 rDecisionTreeConfMatrix <- augment(rclass_tree_final_fit, new_data = red_train) %>%
   conf_mat(truth = quality, estimate = .pred_class)
 
 # augmented on testing 
+rdectree_pred_test <- augment(rclass_tree_final_fit, new_data = red_test) 
+rdectree_rocauc_test <- rdectree_pred_test %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "Red Decision Tree Model")
+rdectree_roccurve_test <- rdectree_pred_test %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+rDecisionTreeConfMatrixTest <- rdectree_pred_test %>% conf_mat(truth = quality, estimate = .pred_class) 
+rdectree_acc_test <-rdectree_pred_test %>% accuracy(truth = quality, estimate = .pred_class)
 
-rDecisionTreeAccTest <-augment(rclass_tree_final_fit, new_data = red_test) %>%
-  conf_mat(truth = quality, estimate = .pred_class) 
-
-rDecisionTreeConfMatrixTest <-augment(rclass_tree_final_fit, new_data = red_test) %>%
-  accuracy(truth = quality, estimate = .pred_class)
-
-# saving files
-save(rDecisionTreePre, rDecisionTreeAccPre, rDecisionTreeConfMatrixPre, rAutoPlot, rbest_rocauc, rDecisionTree, rAutoPlot, rDecisionTreeAcc, rDecisionTreeConfMatrix, rDecisionTreeAccTest, rDecisionTreeConfMatrixTest, file = "RedWineDecisionTree.rda")
+save(rtree_spec, rtree_spec_class, rclass_tree_fit, rDecisionTreePre, rDecisionTreeAccPre, rDecisionTreeConfMatrixPre, rAutoPlot, rbest_rocauc, rDecisionTree, rdectree_pred,
+     rdectree_rocauc, rdectree_roccurve, rDecisionTreeAcc, rDecisionTreeConfMatrix, rdectree_acc_test, rDecisionTreeConfMatrixTest,
+     rdectree_pred_test, rdectree_rocauc_test,rdectree_roccurve_test,
+     file = "RedWineDecisionTree.rda")
 

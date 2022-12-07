@@ -73,13 +73,15 @@ wdectree_roccurve
 wdectree_confusionmatrix
 
 # augmented on testing 
-wDecisionTreeAccTest <-augment(wclass_tree_final_fit, new_data = white_test) %>%
+wdectree_pred_test <- augment(wclass_tree_final_fit, new_data = white_test) 
+wdectree_rocauc_test <- wdectree_pred_test %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Decision Tree Model")
+wdectree_roccurve_test <- wdectree_pred_test %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+wDecisionTreeAccTest <- augment(wclass_tree_final_fit, new_data = white_test) %>%
   conf_mat(truth = quality, estimate = .pred_class) 
-
 wDecisionTreeConfMatrixTest <-augment(wclass_tree_final_fit, new_data = white_test) %>%
   accuracy(truth = quality, estimate = .pred_class)
 
 # saving files 
-save(wDecisionTreePre, wDecisionTreeAccPre, wDecisionTreeConfMatrixPre, wAutoPlot, wbest_rocauc, wDecisionTree, wAutoPlot, 
-     wdectree_pred,wdectree_acc, wdectree_rocauc, wdectree_roccurve, wdectree_confusionmatrix,
+save(wtree_spec, wtree_spec_class, wclass_tree_fit, wAutoPlot, wDecisionTreePre, wDecisionTreeAccPre, wDecisionTreeConfMatrixPre, wAutoPlot, wbest_rocauc, wDecisionTree, wAutoPlot, 
+     wdectree_pred,wdectree_acc, wdectree_rocauc, wdectree_roccurve, wdectree_confusionmatrix, wdectree_pred_test, wdectree_rocauc_test,wdectree_roccurve_test,
      wDecisionTreeAccTest, wDecisionTreeConfMatrixTest, file = "WhiteWineDecisionTree.rda")

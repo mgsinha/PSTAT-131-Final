@@ -42,7 +42,7 @@ rBoostedROCCurveTesting <- rpredictedtest %>% roc_curve(quality, .pred_3,.pred_4
 rBoostedConfusionMatrixTesting <- rpredictedtest %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
 
 # saving 
-save(rBoostedAutoPlot, rbest_rocauc2, rboost_final, rboost_fit_final, rpredicted,rboosted_acc,rboosted_rocauc,
+save(rboost_spec, rboost_wf, param_grid4,rtune_res_boosted, rBoostedAutoPlot, rbest_rocauc2, rboost_final, rboost_fit_final, rpredicted,rboosted_acc,rboosted_rocauc,
      rBoostedROCCurve, rBoostedConfusionMatrix, rpredictedtest, rBoostedROCCurveTesting, rboosted_acc_test, rboosted_rocauc_test, 
      rBoostedConfusionMatrixTesting, file = "RedWineBoostedTrees.rda")
 

@@ -180,19 +180,19 @@ ggplot(scaled_white, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + g
 
 ```{r red wine scatter plots, message= FALSE, warning = FALSE}
 # scaled red volatile acidity versus citric acid
-ggplot(scaled_red, aes(x = volatile.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Volatile Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Volatile Acidity Versus Citric Acid") + theme(plot.title = element_text(size = 5))
+ggplot(scaled_red, aes(x = volatile.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Volatile Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Volatile Acidity Versus Citric Acid") + theme(plot.title = element_text(size = 20))
 
 # scaled red fixed acidity versus citric acid 
-ggplot(scaled_red, aes(x = fixed.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus Citric Acid") + theme(plot.title = element_text(size = 5))
+ggplot(scaled_red, aes(x = fixed.acidity, y = citric.acid)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Citric Acid") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus Citric Acid") + theme(plot.title = element_text(size = 20))
 
 # scaled red fixed acidity versus pH
-ggplot(scaled_red, aes(x = fixed.acidity, y = pH)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "pH") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus pH") + theme(plot.title = element_text(size = 5))
+ggplot(scaled_red, aes(x = fixed.acidity, y = pH)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "pH") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus pH") + theme(plot.title = element_text(size = 20))
 
 # scaled red fixed acidity versus density
-ggplot(scaled_red, aes(x = fixed.acidity, y = density)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus Density") + theme(plot.title = element_text(size = 5))
+ggplot(scaled_red, aes(x = fixed.acidity, y = density)) + geom_point()+scale_x_continuous(name = "Fixed Acidity") + scale_y_continuous(name = "Density") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Fixed Acidity Versus Density") + theme(plot.title = element_text(size = 20))
 
 # scaled red free sulfur dioxide versus total sulfur dioxide
-ggplot(scaled_red, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxide") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Free Sulfur Dioxide Versus Total Sulfur Dioxide") + theme(plot.title = element_text(size = 5))
+ggplot(scaled_red, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxide") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Free Sulfur Dioxide Versus Total Sulfur Dioxide") + theme(plot.title = element_text(size = 20))
 ```
 
 Based on the scatter plots, we can visualize the correlations between the predictors. For example, for white wine, density has a strong positive correlation with residual sugar and a moderate negative correlation with alcohol. Through these scatter plots, we confirm the existence of correlations predicted by our initial correlation matrix.
@@ -274,16 +274,15 @@ CONCLUDING SENTENCE; CONNECT TO HOW KNOWING THESE THINGS AFFECTS OUR MODELLING
 
 We will be fitting linear discriminant analysis, naive Bayes, single decision tree, random forest, and boosted tree models and compare accuracy metrics. Then, we will fit the three models with the best `roc_auc` to our testing data. First, let's see how the models perform on the white wine data set.
 
-```{r recipe, message=FALSE, class.source = 'fold-show', eval=FALSE}
-white_recipe <- recipe(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train) %>% step_dummy(all_nominal_predictors()) %>% step_normalize(all_predictors()) #%>% step_interact(~density:residual.sugar + density:alcohol) 
+```{r recipe, message=FALSE, class.source = 'fold-show'}
+white_recipe <- recipe(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train) %>% step_dummy(all_nominal_predictors()) %>% step_normalize(all_predictors())
 
 red_recipe <- recipe(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train) %>% step_dummy(all_nominal_predictors()) %>% step_normalize(all_predictors())
-#%>% step_interact(~ citric.acid:volatile.acidity + free.sulfur.dioxide:total.sulfur.dioxide)
 ```
 
 We did all of our modeling in R-Scripts for efficiency purposes, since models generally take a long time to run. We will load all of results here, and intermittently call variables throughout the report to visualize our calculations.
 
-```{r loading in model outputs}
+```{r loading in model outputs, class.source = 'fold-show'}
 # LDA 
 load("WhiteLDA.rda")
 load("RedLDA.rda")
@@ -369,7 +368,9 @@ wlda_acc <- wlda_pred %>% accuracy(truth = quality, estimate = .pred_class)
 wlda_rocauc <- wlda_pred %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White LDA Model")
 wlda_roccurve <- wlda_pred %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
 wlda_confusionmatrix <- wlda_pred %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+```
 
+```{r white lda testing visual, eval=FALSE, class.source = 'fold-show'}
 print(wlda_acc)
 print(wlda_rocauc)
 wlda_roccurve
@@ -425,7 +426,8 @@ tune_res_white <- tune_grid(
 ```
 
 ```{r white decision tree autoplot}
-autoplot(tune_res_white)
+#autoplot(tune_res_white)
+wAutoPlot
 ```
 
 ```{r white decision tree best, eval=FALSE}
@@ -461,19 +463,11 @@ wdectree_roccurve
 wdectree_confusionmatrix
 ```
 
-```{r white decision tree LOAD, class.source = 'fold-show', eval=FALSE}
-# JUST LOAD IN INFO WITH THIS RATHER THAN RERUNNING 
-load(file = "WhiteWineDecisionTree.rda")
-```
-
 decision tree analysis
 
 Now let's look at the random forest model.
 
 ```{r white random forest, message=FALSE, eval=FALSE}
-#load saved data
-load(file = "WhiteWineRandomForest.rda")
-
 # setting random forest model up
 wrandfor <- rand_forest() %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
 

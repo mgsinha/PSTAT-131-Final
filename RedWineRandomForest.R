@@ -93,7 +93,35 @@ rrandfor_fit_final <- fit(rrandfor_final, formula = quality ~ volatile.acidity +
 
 rVIP <- vip(rrandfor_fit_final)
 rVIP
+
+# extracting the metrics 
+rrandfor_pred <- augment(rrandfor_fit_final, new_data = red_train) 
+rrandfor_acc <- rrandfor_pred %>% accuracy(truth = quality, estimate = .pred_class) %>% mutate(model_type = "Red Random Forest Model")
+rrandfor_rocauc <- rrandfor_pred %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Random Forest Model")
+rrandfor_roccurve <- rrandfor_pred %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+rrandfor_confusionmatrix <- rrandfor_pred %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+
+print(rrandfor_acc)
+print(rrandfor_rocauc)
+rrandfor_roccurve
+rrandfor_confusionmatrix
+
+# testing 
+rrandfor_pred_test <- augment(rrandfor_fit_final, new_data = red_test) 
+rrandfor_acc_test <- rrandfor_pred_test %>% accuracy(truth = quality, estimate = .pred_class) %>% mutate(model_type = "Red Random Forest Model")
+rrandfor_rocauc_test <- rrandfor_pred_test %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Random Forest Model")
+rrandfor_roccurve_test <- rrandfor_pred_test %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+rrandfor_confusionmatrix_test <- rrandfor_pred_test %>%
+  conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+
+print(rrandfor_acc_test)
+print(rrandfor_rocauc_test)
+rrandfor_roccurve_test
+rrandfor_confusionmatrix_test
+
 # saving 
-save(rAutoPlotRF, rbest_rocauc1, rrandfor_final, rVIP, rrandfor_fit_final, file = "WhiteWineRandomForest.rda")
+save(rrandfor, rrandfor_wf, param_grid2, rtune_res_randfor, rAutoPlotRF, rbest_rocauc1, rrandfor_final, rVIP, rrandfor_fit_final, rrandfor_acc,rrandfor_rocauc, rrandfor_roccurve, rrandfor_confusionmatrix, 
+     rrandfor_acc_test, rrandfor_rocauc_test,
+     rrandfor_roccurve_test, rrandfor_confusionmatrix_test, file = "RedWineRandomForest.rda")
 
 

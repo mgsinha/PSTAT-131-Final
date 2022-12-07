@@ -62,7 +62,7 @@ wrandfor_roccurve_test
 wrandfor_confusionmatrix_test
 
 # saving 
-save(wAutoPlotRF, wbest_rocauc1, wrandfor_final, wVIP, wrandfor_fit_final, wrandfor_pred, 
+save(wrandfor, wrandfor_wf, param_grid1, wtune_res_randfor, wAutoPlotRF, wbest_rocauc1, wrandfor_final, wVIP, wrandfor_fit_final, wrandfor_pred, 
      wrandfor_acc, wrandfor_rocauc, wrandfor_roccurve, wrandfor_confusionmatrix, 
      wrandfor_pred_test, wrandfor_acc_test, wrandfor_rocauc_test,  wrandfor_roccurve_test, wrandfor_confusionmatrix_test,
      file = "WhiteWineRandomForest.rda")
