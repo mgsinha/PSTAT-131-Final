@@ -45,6 +45,6 @@ wlda_roccurve
 wlda_confusionmatrix
 
 # saving 
-save(wlda_model, wlda_wkflow, wlda_fit_cross, wlda_pred, wlda_acc, wlda_rocauc, wlda_roccurve, wlda_confusionmatrix, file = "WhiteLDA.R")
+save(wlda_model, wlda_wkflow, wlda_fit ,wlda_fit_cross, wlda_pred, wlda_acc, wlda_rocauc, wlda_roccurve, wlda_confusionmatrix, file = "WhiteLDA.rda")
 
 

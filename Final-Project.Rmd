@@ -128,6 +128,7 @@ Next, we look at the correlation matrices for white and red wine separately to d
 ### Correlation Matrices {.tabset}
 
 #### White
+
 ```{r white correlation matrix}
 white %>% 
   select(where(is.numeric)) %>% 
@@ -137,6 +138,7 @@ white %>%
 ```
 
 #### Red
+
 ```{r red correlation matrix}
 
 red %>% 
@@ -146,7 +148,7 @@ red %>%
            method = 'color', main = 'Red Wine Correlation Plot')
 ```
 
-## {}
+## 
 
 In the white wine correlation matrix, density and residual sugar; and density and alcohol are the predictors with the highest correlation. Total sulfur dioxide and free sulfur dioxide also have a moderate correlation.
 
@@ -192,7 +194,6 @@ ggplot(scaled_red, aes(x = fixed.acidity, y = density)) + geom_point()+scale_x_c
 # scaled red free sulfur dioxide versus total sulfur dioxide
 ggplot(scaled_red, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxide") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Free Sulfur Dioxide Versus Total Sulfur Dioxide") + theme(plot.title = element_text(size = 5))
 ```
-
 
 Based on the scatter plots, we can visualize the correlations between the predictors. For example, for white wine, density has a strong positive correlation with residual sugar and a moderate negative correlation with alcohol. Through these scatter plots, we confirm the existence of correlations predicted by our initial correlation matrix.
 
@@ -278,6 +279,30 @@ white_recipe <- recipe(quality ~ volatile.acidity + fixed.acidity + citric.acid 
 
 red_recipe <- recipe(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train) %>% step_dummy(all_nominal_predictors()) %>% step_normalize(all_predictors())
 #%>% step_interact(~ citric.acid:volatile.acidity + free.sulfur.dioxide:total.sulfur.dioxide)
+```
+
+We did all of our modeling in R-Scripts for efficiency purposes, since models generally take a long time to run. We will load all of results here, and intermittently call variables throughout the report to visualize our calculations.
+
+```{r loading in model outputs}
+# LDA 
+load("WhiteLDA.rda")
+load("RedLDA.rda")
+
+# LDA with PCA
+load("WhiteLDAPCA.rda")
+load("RedLDAPCA.rda")
+
+# Decision Tree
+load("WhiteWineDecisionTree.rda")
+load("RedWineDecisionTree.rda")
+
+# Random Forest 
+load("WhiteWineRandomForest.rda")
+load("RedWineRandomForest.rda")
+
+# Boosted Trees
+load("WhiteWineBoostedTrees.rda")
+load("RedWineBoostedTrees.rda")
 ```
 
 Let's first explore linear discriminant analysis and naive Bayes classification through k-fold cross validation.
@@ -403,7 +428,7 @@ tune_res_white <- tune_grid(
 autoplot(tune_res_white)
 ```
 
-``` {r white decision tree best, eval=FALSE}
+```{r white decision tree best, eval=FALSE}
 # extracting the best cost complexity parameter
 best_complexity <- select_best(tune_res_white)
 
@@ -412,6 +437,7 @@ wclass_tree_final <- finalize_workflow(wclass_tree_wf, best_complexity)
 wclass_tree_final_fit <- fit(wclass_tree_final, data = white_train)
 
 ```
+
 ```{r white decision tree final fit visual, eval=FALSE}
 wclass_tree_final_fit %>%
   extract_fit_engine() %>%

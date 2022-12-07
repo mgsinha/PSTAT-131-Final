@@ -817,6 +817,8 @@ pcalda_test_acc
 pcalda_test_rocauc
 pcalda_test_roccurve
 pcalda_test_confusionmatrix
+
+save(pca_lda_fit, pca_lda_metrics, pca_lda_fit, white.PCALDA, pcalda_fit, pcalda_acc, pcalda_rocauc, pcalda_roccurve, pcalda_confusionmatrix, pcalda_test_acc, pcalda_test_rocauc, pcalda_test_roccurve, pcalda_test_confusionmatrix, file = "WhiteLDAPCA.rda")
 ```
 
 ```{r pca with lda red}
@@ -890,4 +892,6 @@ rpcalda_test_acc
 rpcalda_test_rocauc
 rpcalda_test_roccurve
 rpcalda_test_confusionmatrix
+
+save(rpca_lda_fit, rpca_lda_metrics, rpca_lda_fit, red.PCALDA, rpcalda_fit, rpcalda_acc, rpcalda_rocauc, rpcalda_roccurve, rpcalda_confusionmatrix, rpcalda_test_acc, rpcalda_test_rocauc, rpcalda_test_roccurve, rpcalda_test_confusionmatrix, file = "RedLDAPCA.rda")
 ```
