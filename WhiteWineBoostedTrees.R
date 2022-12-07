@@ -1,5 +1,5 @@
 # White Boosted Trees 
-
+load("WhiteWineBoostedTrees.rda")
 wboost_spec <-  boost_tree(tree_depth = 5) %>% 
   set_engine("xgboost") %>% 
   set_mode("classification")

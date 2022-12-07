@@ -32,33 +32,29 @@ tidymodels_prefer()
 
 ## Overview of Data Set
 
-<br> 
+<br>
 
-We are analyzing the quality of wine based on 11 predictors: fixed acidity, volatile acidity, citric acid, residual sugar, chlorides, free sulfur dioxide, total sulfur dioxide, density, pH, sulfates, alcohol. Quality, in this instance, is defined as an indicator of its craftsmanship and, thus, desirability which can be used, for example, in pricing. Quality does not necessarily indicate if a wine has gone bad. We will use two data sets -- one for white wine and the other for red -- to create two respective machine learning models. There are 4899 observations in the white wine data set and 1600 observations in the red wine data set. 
+We are analyzing the quality of wine based on 11 predictors: fixed acidity, volatile acidity, citric acid, residual sugar, chlorides, free sulfur dioxide, total sulfur dioxide, density, pH, sulfates, alcohol. Quality, in this instance, is defined as an indicator of its craftsmanship and, thus, desirability which can be used, for example, in pricing. Quality does not necessarily indicate if a wine has gone bad. We will use two data sets -- one for white wine and the other for red -- to create two respective machine learning models. There are 4899 observations in the white wine data set and 1600 observations in the red wine data set.
 
-
-## Overview of Research Questions 
+## Overview of Research Questions
 
 <br>
 
-We are interested in conducting analysis on both the white and red wine to assess the quality of wine in new wines in production so that they may be accurately priced and marketed.  
+We are interested in conducting analysis on both the white and red wine to assess the quality of wine in new wines in production so that they may be accurately priced and marketed.
 
-## Proposed Project Timeline 
+## Proposed Project Timeline
 
 <br>
 
-Week 2: Data cleaning<br>
-Week 3-5: Exploratory Data Analysis<br>
-Week 6-8: Model Building<br>
-Week 9: Conclusion and final touches<br>
+Week 2: Data cleaning<br> Week 3-5: Exploratory Data Analysis<br> Week 6-8: Model Building<br> Week 9: Conclusion and final touches<br>
 
 ## Any questions or concerns
 
 <br>
 
+# Loading Data and Packages
 
-# Loading Data and Packages 
-This project uses data on the white and red wine, which records information about the details of the wine. 
+This project uses data on the white and red wine, which records information about the details of the wine.
 
 ```{r load data, message = FALSE}
 
@@ -87,8 +83,7 @@ red$type <- "Red"
 combinedWine <- rbind(white, red)
 ```
 
-
-# Data Cleaning 
+# Data Cleaning
 
 Our data does not need to be cleaned because it's perfect :D
 
@@ -240,7 +235,9 @@ ggplot(red[red$free.sulfur.dioxide < 50,], aes(x = free.sulfur.dioxide, y = qual
   scale_fill_brewer(palette = "RdPu")
 
 ```
+
 ## Model Fitting
+
 ```{r creating recipe}
 # creating recipes
 
