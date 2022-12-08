@@ -120,8 +120,9 @@ rrandfor_roccurve_test
 rrandfor_confusionmatrix_test
 
 # saving 
-save(rrandfor, rrandfor_wf, param_grid2, rtune_res_randfor, rAutoPlotRF, rbest_rocauc1, rrandfor_final, rVIP, rrandfor_fit_final, rrandfor_acc,rrandfor_rocauc, rrandfor_roccurve, rrandfor_confusionmatrix, 
-     rrandfor_acc_test, rrandfor_rocauc_test,
+save(rrandfor, rrandfor_wf, param_grid2, rtune_res_randfor, rAutoPlotRF, rbest_rocauc1, rrandfor_final, rVIP, rrandfor_fit_final, rrandfor_acc,rrandfor_rocauc, 
+     rrandfor_roccurve, rrandfor_confusionmatrix, 
+     rrandfor_acc_test, rrandfor_rocauc_test,rrandfor_pred_test,rrandfor_acc_test,rrandfor_rocauc_test,
      rrandfor_roccurve_test, rrandfor_confusionmatrix_test, file = "RedWineRandomForest.rda")
 
 

@@ -838,17 +838,17 @@ pcalda_test_rocauc
 pcalda_test_roccurve
 pcalda_test_confusionmatrix
 
-save(pca_lda_fit, pca_lda_metrics, pca_lda_fit, white.PCALDA, pcalda_fit, pcalda_acc, pcalda_rocauc, pcalda_roccurve, pcalda_confusionmatrix, pcalda_test_acc, pcalda_test_rocauc, pcalda_test_roccurve, pcalda_test_confusionmatrix, file = "WhiteLDAPCA.rda")
+save(white_recipe_pca,tuneGrid, trControl, wlda_pca_wkflow, pca_lda_fit, pca_lda_metrics, pca_lda_fit, white.PCALDA, pcalda_fit, pcalda_acc, pcalda_rocauc, pcalda_roccurve, pcalda_confusionmatrix, pcalda_test_acc, pcalda_test_rocauc, pcalda_test_roccurve, pcalda_test_confusionmatrix, file = "WhiteLDAPCA.rda")
 ```
 
 ```{r pca with lda red}
 red_recipe_pca <- recipe(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train) %>% step_dummy(all_nominal_predictors()) %>% step_normalize(all_predictors()) %>% step_pca(all_numeric_predictors(), num_comp = tune())
 
 # column name(s) must match tune() above
-tuneGrid <- expand.grid(num_comp = 1:ncol(red_recipe_pca$template))
+rtuneGrid <- expand.grid(num_comp = 1:ncol(red_recipe_pca$template))
 
 # control tune_grid() process below
-trControl <- control_grid(verbose = TRUE, allow_par = FALSE)
+rtrControl <- control_grid(verbose = TRUE, allow_par = FALSE)
 
 rlda_pca_wkflow <- workflow() %>% 
   add_model(rlda_model) %>% 
@@ -913,5 +913,5 @@ rpcalda_test_rocauc
 rpcalda_test_roccurve
 rpcalda_test_confusionmatrix
 
-save(rpca_lda_fit, rpca_lda_metrics, rpca_lda_fit, red.PCALDA, rpcalda_fit, rpcalda_acc, rpcalda_rocauc, rpcalda_roccurve, rpcalda_confusionmatrix, rpcalda_test_acc, rpcalda_test_rocauc, rpcalda_test_roccurve, rpcalda_test_confusionmatrix, file = "RedLDAPCA.rda")
+save(red_recipe_pca, rtuneGrid, rtrControl, rlda_pca_wkflow, rpca_lda_fit, rpca_lda_metrics, rpca_lda_fit, red.PCALDA, rpcalda_fit, rpcalda_acc, rpcalda_rocauc, rpcalda_roccurve, rpcalda_confusionmatrix, rpcalda_test_acc, rpcalda_test_rocauc, rpcalda_test_roccurve, rpcalda_test_confusionmatrix, file = "RedLDAPCA.rda")
 ```

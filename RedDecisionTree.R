@@ -77,8 +77,8 @@ rdectree_roccurve_test <- rdectree_pred_test %>% roc_curve(quality, .pred_3,.pre
 rDecisionTreeConfMatrixTest <- rdectree_pred_test %>% conf_mat(truth = quality, estimate = .pred_class) 
 rdectree_acc_test <-rdectree_pred_test %>% accuracy(truth = quality, estimate = .pred_class)
 
-save(rtree_spec, rtree_spec_class, rclass_tree_fit, rDecisionTreePre, rDecisionTreeAccPre, rDecisionTreeConfMatrixPre, rAutoPlot, rbest_rocauc, rDecisionTree, rdectree_pred,
-     rdectree_rocauc, rdectree_roccurve, rDecisionTreeAcc, rDecisionTreeConfMatrix, rdectree_acc_test, rDecisionTreeConfMatrixTest,
+save(rclass_tree_wf, param_grid, rtree_spec, tune_res_red, rtree_spec_class, rclass_tree_fit, rDecisionTreePre, rDecisionTreeAccPre, rDecisionTreeConfMatrixPre, rAutoPlot, rbest_rocauc, rDecisionTree, rdectree_pred,
+     rbest_complexity, rclass_tree_final, rdectree_rocauc, rdectree_roccurve, rDecisionTreeAcc, rDecisionTreeConfMatrix, rdectree_acc_test, rDecisionTreeConfMatrixTest, rclass_tree_final_fit, 
      rdectree_pred_test, rdectree_rocauc_test,rdectree_roccurve_test,
      file = "RedWineDecisionTree.rda")
 
