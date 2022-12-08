@@ -361,7 +361,7 @@ Through k-fold cross validation, we can see that the linear discriminant analysi
 
 ### Principle Component Analysis
 
-```{r pca lda white, eval=FALSE}
+```{r white pca lda, eval=FALSE}
 white_recipe_pca <- recipe(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train) %>% step_dummy(all_nominal_predictors()) %>% step_normalize(all_predictors()) %>% step_pca(all_numeric_predictors(), num_comp = tune())
 
 # column name(s) must match tune() above
@@ -467,7 +467,7 @@ augment(wclass_tree_fit, new_data = white_train) %>%
 
 Here, we 
 
-```{r, white decision tree tuning, class.source = 'fold-show', eval=FALSE}
+```{r white decision tree tuning, class.source = 'fold-show', eval=FALSE}
 # tuning cost complexity 
 wclass_tree_wf<- workflow() %>%
   add_model(wtree_spec_class %>% 
@@ -671,7 +671,7 @@ wbest_roc_table
 
 explain the best ones of the tree type models also mention between lda and naive bayes, lda was better, but we are gonna try using pca first
 
-```{r PCA LDA testing code, eval=FALSE}
+```{r white PCA LDA testing code, eval=FALSE}
 pcalda_fit_test <- augment(fit_final, new_data = white_test) 
 pcalda_test_acc <- pcalda_fit_test %>% accuracy(truth = quality, estimate = .pred_class)
 pcalda_test_rocauc <- pcalda_fit_test %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Wine LDA Model using PCA")
@@ -680,15 +680,14 @@ pcalda_test_confusionmatrix <- pcalda_fit_test %>%
   conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
 ```
 
-```{r PCA LDA testing visual}
+```{r white PCA LDA testing visual}
 pcalda_test_acc
 pcalda_test_rocauc
 pcalda_test_roccurve
 pcalda_test_confusionmatrix
 ```
 
-```{r random forest testing code, eval=FALSE}
-# random forest testing
+```{r white random forest testing code, eval=FALSE}
 wrandfor_pred_test <- augment(wrandfor_fit_final, new_data = white_test) 
 wrandfor_acc_test <- wrandfor_pred_test %>% accuracy(truth = quality, estimate = .pred_class) %>% mutate(model_type = "White Random Forest Model")
 wrandfor_rocauc_test <- wrandfor_pred_test %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Random Forest Model")
@@ -697,15 +696,14 @@ wrandfor_confusionmatrix_test <- augment(wrandfor_fit_final, new_data = white_te
   conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
 ```
 
-```{r random forest testing visual}
+```{r white random forest testing visual}
 print(wrandfor_acc_test)
 print(wrandfor_rocauc_test)
 wrandfor_roccurve_test
 wrandfor_confusionmatrix_test
 ```
 
-```{r hite boosted trees testing code, eval=FALSE}
-# boosted trees testing 
+```{r white boosted trees testing code, eval=FALSE}
 wpredictedtest <- augment(wboost_fit_final, new_data = white_test) 
 wboosted_acc_test <- wpredictedtest %>% accuracy(truth = quality, estimate = .pred_class) %>% mutate(model_type = "White Boosted Trees Model")
 wboosted_rocauc_test <- wpredictedtest %>% roc_auc(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Boosted Trees Model")
@@ -738,7 +736,7 @@ red_recipe <- recipe(quality ~ volatile.acidity + fixed.acidity + citric.acid + 
 
 #### Linear Discriminant Analysis
 
-```{r red k-fold, message=FALSE}
+```{r red k-fold, message=FALSE, class.source = 'fold-show'}
 #lda model using cross validation
 rlda_model <- discrim_linear() %>% 
   set_mode("classification") %>% 
@@ -755,7 +753,7 @@ collect_metrics(rlda_fit_cross)
 
 #### Naive Bayes
 
-```{r k-fold naive bayes, message=FALSE}
+```{r k-fold naive bayes, message=FALSE, class.source = 'fold-show'}
 #naive bayes model using cross validation
 rnb_mod <- naive_Bayes() %>% 
   set_mode("classification") %>% 
@@ -775,15 +773,21 @@ Through k-fold cross validation, we can see that the linear discriminant analysi
 
 ### Principle Component Analysis
 
-```{r lda using pca red, eval=FALSE}
+```{r red pca lda recipe, eval=FALSE, class.source = 'fold-show'}
 red_recipe_pca <- recipe(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train) %>% step_dummy(all_nominal_predictors()) %>% step_normalize(all_predictors()) %>% step_pca(all_numeric_predictors(), num_comp = tune())
+```
 
+``` {r red pca lda tuning, eval=FALSE, class.source = 'fold-show'}
 # column name(s) must match tune() above
 tuneGrid <- expand.grid(num_comp = 1:ncol(red_recipe_pca$template))
+```
 
+```{r red pca lda tune grid, eval=FALSE, class.source = 'fold-show'}
 # control tune_grid() process below
 trControl <- control_grid(verbose = TRUE, allow_par = FALSE)
+```
 
+```{r red pca lda workflow and fit, eval=FALSE, class.source = 'fold-show'}
 rlda_pca_wkflow <- workflow() %>% 
   add_model(rlda_model) %>% 
   add_recipe(red_recipe_pca)
@@ -795,13 +799,17 @@ rpca_lda_fit <- rlda_pca_wkflow %>%
             control = trControl)
 
 rpca_lda_metrics <- rpca_lda_fit %>% collect_metrics()
+```
 
+``` {r red pca lda plot metrics}
 ggplot(rpca_lda_metrics, aes(x = num_comp, y = mean)) +
   geom_line(color = "#3E4A89FF", linewidth = 2, alpha = 0.6) +
   scale_x_continuous(breaks = 1:ncol(red_recipe_pca$template)) +
   facet_wrap(~.metric) +
   theme_bw()
+```
 
+```{r red pca lda fit, eval=FALSE}
 rpca_lda_fit %>% show_best(metric = "accuracy")
 
 (bestTune <- rpca_lda_fit %>% select_by_one_std_err(num_comp, metric = "accuracy"))
@@ -809,26 +817,33 @@ rpca_lda_fit %>% show_best(metric = "accuracy")
 rlda_pca_wkflow_final <- rlda_pca_wkflow %>% finalize_workflow(bestTune)
 
 rfit_final <- rlda_pca_wkflow_final %>% fit(red_train)
+```
 
+```{r red pca lda tibble, eval=FALSE}
 red.PCALDA <- tibble(red_train,
        predict(rfit_final, new_data =red_train, type = "class"), # predicted class
        predict(rfit_final, new_data = red_train, type = "prob"), # posterior prob. for classes
        as_tibble(predict(rfit_final, new_data = red_train, type = "raw")$x)) # LD scores
+```
 
+```{r red pca lda plot fit}
 # plot
 ggplot(red.PCALDA, aes(x = LD1, y = LD2)) +
   geom_point(aes(color = quality, shape = .pred_class)) + 
   theme_bw() +
   ggtitle("PCA-LDA (DAPC) on Red Wine Training dataset, using 9 PC")
+```
 
-#augmented on training 
+```{r red pca lda final fit, eval=FALSE}
 rpcalda_fit <- augment(rfit_final, new_data = red_train) 
 rpcalda_acc <- rpcalda_fit %>% accuracy(truth = quality, estimate = .pred_class)
 rpcalda_rocauc <- rpcalda_fit %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Wine LDA Model using PCA ")
 rpcalda_roccurve <- rpcalda_fit %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
 rpcalda_confusionmatrix <- rpcalda_fit %>%
   conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+```
 
+``` {r red pca lda final fit visual}
 rpcalda_acc
 rpcalda_rocauc
 rpcalda_roccurve
@@ -845,35 +860,46 @@ rtree_spec <- decision_tree() %>%
 # setting mode to classification
 rtree_spec_class <- rtree_spec %>%
   set_mode("classification")
+```
 
+```{r red decision tree fit, eval=FALSE, class.source = 'fold-show'}
 rclass_tree_fit <- rtree_spec_class %>%
   fit(quality ~ volatile.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train)
+```
 
-
+```{r red decision tree fit visual, eval=FALSE, class.source = 'fold-show'}
 rclass_tree_fit %>%
   extract_fit_engine() %>%
   rpart.plot()
+```
 
+```{r red decision tree augment training, eval=FALSE, class.source = 'fold-show'}
 # augmented on training 
 augment(rclass_tree_fit, new_data = red_train) %>%
   accuracy(truth = quality, estimate = .pred_class)
 
 augment(rclass_tree_fit, new_data = red_train) %>%
   conf_mat(truth = quality, estimate = .pred_class)
+```
 
+```{r red decision tree augment testing, eval=FALSE, class.source = 'fold-show'}
 # augmented on testing 
 augment(rclass_tree_fit, new_data = red_train) %>%
   conf_mat(truth = quality, estimate = .pred_class) 
 
 augment(rclass_tree_fit, new_data = red_train) %>%
   accuracy(truth = quality, estimate = .pred_class)
+```
 
+```{r red decision tree tuning, eval=FALSE, class.source = 'fold-show'}
 # tuning cost complexity 
 rclass_tree_wf<- workflow() %>%
   add_model(rtree_spec_class %>% 
               set_args(cost_complexity = tune())) %>% 
   add_formula(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol)
+```
 
+``` {r red decision tree tuning grid, eval=FALSE}
 param_grid <- grid_regular(cost_complexity(range = c(-3,-1)), levels = 10)
 
 tune_res_red <- tune_grid(
@@ -882,27 +908,37 @@ tune_res_red <- tune_grid(
   grid = param_grid,
   metric = metric_set(accuracy)
 )
+```
 
+```{r red decision tree autoplot}
 autoplot(tune_res_red)
+```
 
-# extracting the best cost complexitiy parameter
+```{r red decision tree best complexity, eval=FALSE}
+# extracting the best cost complexity parameter
 best_complexity <- select_best(tune_res_red)
 
 rclass_tree_final <- finalize_workflow(rclass_tree_wf, best_complexity)
 
 rclass_tree_final_fit <- fit(rclass_tree_final, data = red_train)
+```
 
+```{r red decision tree final fit visual}
 rclass_tree_final_fit %>%
   extract_fit_engine() %>%
   rpart.plot()
+```
 
+```{r red decision tree augment training final, eval=FALSE}
 # augmented on training 
 augment(rclass_tree_final_fit, new_data = red_train) %>%
   accuracy(truth = quality, estimate = .pred_class)
 
 augment(rclass_tree_final_fit, new_data = red_train) %>%
   conf_mat(truth = quality, estimate = .pred_class)
+```
 
+```{r red decision tree augment testing final, eval=FALSE}
 # augmented on testing 
 augment(rclass_tree_final_fit, new_data = red_test) %>%
   conf_mat(truth = quality, estimate = .pred_class) 
@@ -913,15 +949,18 @@ augment(rclass_tree_final_fit, new_data = red_test) %>%
 
 ### Random Forest
 
-```{r red random forest,message=FALSE, eval=FALSE}
-# setting random forest model up
+```{r red random forest set up, message=FALSE, eval=FALSE}
 rrandfor <- rand_forest() %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
+```
 
+```{r red random forest workflow, eval=FALSE, class.source = 'fold-show'}
 rrandfor_wf <- workflow() %>%
   add_model(rrandfor %>%
               set_args(mtry = tune(), trees = tune(), min_n = tune())) %>% 
   add_formula(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol)
+```
 
+```{r red random forest tuning, eval=FALSE, class.source = 'fold-show'}
 # tuning the model to find the best arguments 
 param_grid2 <- grid_regular(mtry(range = c(1,9)), trees(range = c(15,17)), min_n(range = c(30,50)), levels = 8)
 
@@ -930,9 +969,13 @@ rtune_res_randfor <- tune_grid(
   resamples = red_fold,
   grid = param_grid2
 )
+```
 
-rAutoPlotRF <- autoplot(rtune_res_randfor)
+```{r red random forest autoplot}
+rAutoPlotRF
+```
 
+```{r red random forest metrics, eval=FALSE, class.source = 'fold-show'}
 # collecting metrics to find best mean
 rbest_rocauc1 <- collect_metrics(rtune_res_randfor) %>% arrange(desc(mean))
 print(rbest_rocauc1)
@@ -940,30 +983,29 @@ rbest_metric1 <- select_best(rtune_res_randfor)
 
 rrandfor_final <- rand_forest(mtry = 7, trees = 17, min_n = 32) %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
 rrandfor_fit_final <- fit(rrandfor_final, formula = quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol,data = red_train)
+```
 
+```{r red random forest vip, eval=FALSE, class.source = 'fold-show'}
 rVIP <- vip(rrandfor_fit_final)
 rVIP
-
-# saving 
-save(rAutoPlotRF, rbest_rocauc1, rrandfor_final, rVIP, rrandfor_fit_final, file = "WhiteWineRandomForest.rda")
-
-#load saved data
-#load()
 ```
 
 ### Boosted Tree
 
-```{r red boosted tree, message=FALSE, eval=FALSE}
-# Red Boosted Trees 
+```{r red boosted tree spec, message=FALSE, eval=FALSE}
 rboost_spec <-  boost_tree(tree_depth = 5) %>% 
   set_engine("xgboost") %>% 
   set_mode("classification")
+```
 
+```{r red boosted tree workflow, eval=FALSE, class.source = 'fold-show' }
 rboost_wf <- workflow() %>%
   add_model(rboost_spec %>%
               set_args(trees = tune())) %>% 
   add_formula(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol)
+```
 
+```{r red boosted tree tuning grid, eval=FALSE, class.source = 'fold-show'}
 param_grid4 <- grid_regular(trees(range = c(10,2000)), levels = 10)
 
 rtune_res_boosted <- tune_grid(
@@ -971,9 +1013,13 @@ rtune_res_boosted <- tune_grid(
   resamples = red_fold,
   grid = param_grid4
 )
-rBoostedAutoPlot <- autoplot(rtune_res_boosted)
-rBoostedAutoPlot
+```
 
+```{r red boosted tree autoplot}
+rBoostedAutoPlot
+```
+
+```{r red boosted tree metrics, eval=FALSE, class.source = 'fold-show'}
 rbest_rocauc2 <- collect_metrics(rtune_res_boosted) %>% arrange(desc(mean))
 print(rbest_rocauc2)
 
@@ -990,77 +1036,67 @@ rboosted_acc <- rpredicted %>% accuracy(truth = quality, estimate = .pred_class)
 rboosted_rocauc <-  rpredicted %>% roc_auc(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Boosted Trees Model")
 rBoostedROCCurve <- rpredicted %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
 rBoostedConfusionMatrix <- rpredicted %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
-
-rpredictedtest <- augment(rboost_fit_final, new_data = red_test) 
-rboosted_acc_test <- rpredictedtest %>% accuracy(truth = quality, estimate = .pred_class) %>% mutate(model_type = "White Boosted Trees Model")
-rboosted_rocauc_test <- rpredictedtest %>% roc_auc(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Boosted Trees Model")
-rBoostedROCCurveTesting <- rpredictedtest %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
-rBoostedConfusionMatrixTesting <- rpredictedtest %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
-
 ```
 
 ### Determining Best Fit
 
 ```{r red best fit, message=FALSE, eval=FALSE}
-#RED
 rbest_rocauc
 rbest_rocauc1
 rbest_rocauc2
 rbest_roc_table <- rbind(rbest_rocauc[1,c(2,4)], rbest_rocauc1[1,c(4,6)], rbest_rocauc2[1,c(2,4)] ) %>% mutate(model_type = c("Decision Tree", "Random Forest", "Boosted Trees"))
 rbest_roc_table
-
-# We will test our model using Boosted Trees and Random Forest 
-```
-
-```{r red lda testing, message=FALSE, eval=FALSE}
-# fitting the model
-rlda_model <- discrim_linear() %>% 
-  set_mode("classification") %>% 
-  set_engine("MASS") 
-
-# creating the workflow
-rlda_wkflow <- workflow() %>% 
-  add_model(rlda_model) %>% 
-  add_recipe(red_recipe)
-
-# fitting the model to training data
-rlda_fit <- fit(rlda_wkflow, red_train)
-
-# now using that fit to test the model on the testing data
-rlda_res <- predict(rlda_fit, new_data = red_test %>%  select(-quality), type = "class" ) 
-rlda_res <- bind_cols(rlda_res, red_test %>%  select(quality)) 
-
-# returning our predictions and visualizations 
-rlda_pred <- augment(rlda_fit, new_data = red_test)
-rlda_acc <- rlda_pred %>% accuracy(truth = quality, estimate = .pred_class)
-rlda_rocauc <- rlda_pred %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8)%>% mutate(model_type = "Red LDA Model")
-rlda_roccurve <- rlda_pred %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
-rlda_confusionmatrix <- rlda_pred %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
-
-# predictions, accuracy, roc auc, roc curve, confusion matrix 
-print(rlda_acc)
-print(rlda_res)
-print(rlda_rocauc)
-rlda_roccurve
-rlda_confusionmatrix
-
 ```
 
 ### Predicting on the Testing Data
 
-```{r test on 3 models (rf, boosted trees, pca lda), eval=FALSE}
-# lda using pca test
+```{r PCA LDA testing code, eval=FALSE}
 rpcalda_fit_test <- augment(rfit_final, new_data = red_test) 
 rpcalda_test_acc <- rpcalda_fit_test %>% accuracy(truth = quality, estimate = .pred_class)
 rpcalda_test_rocauc <- rpcalda_fit_test %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "Red Wine LDA Model using PCA")
 rpcalda_test_roccurve <- rpcalda_fit_test %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
 rpcalda_test_confusionmatrix <- rpcalda_fit_test %>%
   conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+```
 
+```{r PCA LDA testing visual}
 rpcalda_test_acc
 rpcalda_test_rocauc
 rpcalda_test_roccurve
 rpcalda_test_confusionmatrix
+```
+
+```{r random forest testing code, eval = FALSE}
+rrandfor_pred_test <- augment(wrandfor_fit_final, new_data = white_test) 
+rrandfor_acc_test <- wrandfor_pred_test %>% accuracy(truth = quality, estimate = .pred_class) %>% mutate(model_type = "White Random Forest Model")
+rrandfor_rocauc_test <- wrandfor_pred_test %>% roc_auc(truth = quality, estimate = .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Random Forest Model")
+rrandfor_roccurve_test <- wrandfor_pred_test %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+rrandfor_confusionmatrix_test <- augment(wrandfor_fit_final, new_data = white_test) %>%
+  conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+```
+
+```{r random forest testing visual}
+rrandfor_pred_test
+rrandfor_acc_test
+rrandfor_rocauc_test
+rrandfor_roccurve_test
+rrandfor_confusionmatrix_test
+```
+
+```{r boosted tree testing code, eval = FALSE}
+rpredictedtest <- augment(wboost_fit_final, new_data = white_test) 
+rboosted_acc_test <- wpredictedtest %>% accuracy(truth = quality, estimate = .pred_class) %>% mutate(model_type = "White Boosted Trees Model")
+rboosted_rocauc_test <- wpredictedtest %>% roc_auc(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% mutate(model_type = "White Boosted Trees Model")
+rBoostedROCCurveTesting <- wpredictedtest %>% roc_curve(quality, .pred_3,.pred_4, .pred_5 , .pred_6 , .pred_7, .pred_8) %>% autoplot()
+rBoostedConfusionMatrixTesting <- wpredictedtest %>% conf_mat(truth = quality, estimate = .pred_class) %>% autoplot(type = "heatmap")
+```
+
+```{r boosted tree testing visual}
+rpredictedtest
+rboosted_acc_test
+rboosted_rocauc_test
+rBoostedROCCurveTesting
+rBoostedConfusionMatrixTesting
 ```
 
 red conclusion
