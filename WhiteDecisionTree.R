@@ -84,4 +84,4 @@ wDecisionTreeConfMatrixTest <-augment(wclass_tree_final_fit, new_data = white_te
 # saving files 
 save(wtree_spec, wtree_spec_class, wclass_tree_fit, wAutoPlot, wDecisionTreePre, wDecisionTreeAccPre, wDecisionTreeConfMatrixPre, wAutoPlot, wbest_rocauc, wDecisionTree, wAutoPlot, 
      wdectree_pred,wdectree_acc, wdectree_rocauc, wdectree_roccurve, wdectree_confusionmatrix, wdectree_pred_test, wdectree_rocauc_test,wdectree_roccurve_test,
-     wDecisionTreeAccTest, wDecisionTreeConfMatrixTest, file = "WhiteWineDecisionTree.rda")
+     wclass_tree_final_fit, wDecisionTreeAccTest, wDecisionTreeConfMatrixTest, file = "WhiteWineDecisionTree.rda")
