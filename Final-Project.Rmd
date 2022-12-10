@@ -44,7 +44,7 @@ We are analyzing the quality of wine based on 11 predictors: fixed acidity, vola
 
 ## **Overview of Research Questions**
 
-We are interested in conducting analysis on both the white and red wine to assess the quality of wine in new wines in production so that they may be accurately priced and marketed.
+We are interested in conducting analysis on both the white and red wine to assess the quality of wine in new wines in production so that they may be accurately priced and marketed. Maya works at a natural wine bar in downtown Santa Barbara and is familiar with the components of wine that have to do with taste, influence of location, and food pairing, but less familiar with chemical composition of a quality wine. She is specifically interested in how certain chemical levels can influence the quality and desireability of a wine, incorporating this knowledge in how to sell wine to her customers. 
 
 <br>
 
@@ -127,7 +127,7 @@ Next, we look at the correlation matrices for white and red wine separately to d
 
 ### **Correlation Matrices** {.tabset}
 
-#### White
+#### **White**
 
 ```{r white correlation matrix}
 white %>% 
@@ -139,7 +139,7 @@ white %>%
 
 In the white wine correlation matrix, density and residual sugar; and density and alcohol are the predictors with the highest correlation. Total sulfur dioxide and free sulfur dioxide also have a moderate correlation.
 
-#### Red
+#### **Red**
 
 ```{r red correlation matrix}
 
@@ -152,14 +152,13 @@ red %>%
 
 In the red wine correlation matrix, citric acid and fixed acidity; density and fixed acidity; citric acid and volatile acidity; pH and fixed acidity; and free sulfur dioxide and total sulfur dioxide are highly correlated with each other.
 
-<br>
-<br>
+<br> <br>
 
 ### **Scatter plots** {.tabset}
 
 To visualize and validate these correlations, let's take a look at the scaled scatter plot of each predictor plotted against its correlated counterpart.
 
-#### White
+#### **White**
 
 ```{r white wine scatter plots, message=FALSE, warning = FALSE}
 
@@ -177,7 +176,7 @@ ggplot(scaled_white, aes(x = alcohol, y = density)) + geom_point()+scale_x_conti
 ggplot(scaled_white, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxide") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Free Sulfur Versus Total Sulfur Dioxide") + theme(plot.title = element_text(size = 20))
 ```
 
-#### Red
+#### **Red**
 
 ```{r red wine scatter plots, message= FALSE, warning = FALSE}
 # scaled red volatile acidity versus citric acid
@@ -196,7 +195,7 @@ ggplot(scaled_red, aes(x = fixed.acidity, y = density)) + geom_point()+scale_x_c
 ggplot(scaled_red, aes(x = free.sulfur.dioxide, y = total.sulfur.dioxide)) + geom_point()+scale_x_continuous(name = "Free Sulfur Dioxide") + scale_y_continuous(name = "Total Sulfur Dioxide") + geom_smooth(method = "lm", se = FALSE)+ ggtitle("Free Sulfur Dioxide Versus Total Sulfur Dioxide") + theme(plot.title = element_text(size = 20))
 ```
 
-##  {.unnumbered}
+### {-}
 
 Based on the scatter plots, we can visualize the correlations between the predictors. For example, for white wine, density has a strong positive correlation with residual sugar and a moderate negative correlation with alcohol. Through these scatter plots, we confirm the existence of correlations predicted by our initial correlation matrix.
 
@@ -269,9 +268,7 @@ ggplot(combinedWine, mapping = aes(x = sulphates, y = quality, fill = quality)) 
 
 From the box plots we can see that red wine generally has a lower sulfur dioxide content than white wine. Also, averages across each stratification of quality have similar values except for sulfates in red wine, which have a slight positive correlation with quality.
 
-CONCLUDING SENTENCE; CONNECT TO HOW KNOWING THESE THINGS AFFECTS OUR MODELLING
-
-<br>
+In general, data scientists conduct exploratory data analysis to see how predictor variables interact with the response and with each other before we make any assumptions. Based on the EDA that we conducted, we will keep all of our predictor variables in our recipes and will not interact any terms. <br>
 
 ## **Loading in Saved Models**
 
@@ -303,7 +300,7 @@ load("RedWineBoostedTrees.rda")
 
 We will be fitting linear discriminant analysis, naive Bayes, single decision tree, random forest, and boosted tree models and compare accuracy metrics. Then, we will fit the three models with the best `roc_auc` to our testing data. First, let's see how the models perform on the white wine data set.
 
-### Recipe
+### **Recipe**
 
 In our recipe for the white wine data set, we selected for all the predictors, converted character or factored data into numeric binary data, and normalized all predictors.
 
@@ -311,11 +308,11 @@ In our recipe for the white wine data set, we selected for all the predictors, c
 white_recipe <- recipe(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = white_train) %>% step_dummy(all_nominal_predictors()) %>% step_normalize(all_predictors())
 ```
 
-### K-Fold Cross Validation
+### **K-Fold Cross Validation**
 
 Let's first explore linear discriminant analysis and naive Bayes classification through k-fold cross validation.
 
-#### Linear Discriminant Analysis
+#### **Linear Discriminant Analysis**
 
 For the linear discriminant analysis model, we use a classification mode and set the engine to `MASS`. We then add the model and recipe to a workflow and create a fit between the workflow and folded data. We are using `roc_auc` to evaluate accuracy.
 
@@ -337,11 +334,11 @@ wlda_fit_cross <- fit_resamples(wlda_wkflow, white_fold)
 collect_metrics(wlda_fit_cross)
 ```
 
-Now, let's take a look at how our cross validation method works with a Naive Bayes model. In particular, let's see if the accuracy increases.
-
 <br>
 
-#### Naive Bayes
+#### **Naive Bayes**
+
+Now, let's take a look at how our cross validation method works with a Naive Bayes model. In particular, let's see if the accuracy increases.
 
 ```{r white k-fold Naive Bayes, message = FALSE, class.source = 'fold-show'}
 #set up model with mode classification and engine kLaR
@@ -363,11 +360,11 @@ wnb_fit_cross <- fit_resamples(wnb_wkflow, white_fold)
 collect_metrics(wnb_fit_cross)
 ```
 
-Through k-fold cross validation, we can see that the linear discriminant analysis model produces better accuracy than the Naive Bayes model.
+Through k-fold cross validation, we can see that the linear discriminant analysis model produces better accuracy than the Naive Bayes model comparing the accuracy metrics of .52 to .45 respectively.
 
-Although, to account for the collinearity between some of our predictors, which we saw in the exploratory data analysis, we will conduct principal component analysis on the data. Since our linear discriminant analysis model was better on the white wine data set, we will use the principal components on an LDA model.
+To account for the collinearity between some of our predictors, which we saw in the exploratory data analysis, we will conduct principal component analysis on the data. Since our linear discriminant analysis model was better on the white wine data set, we will use the principal components on an LDA model.
 
-### Principal Component Analysis
+### **Principal Component Analysis**
 
 To conduct principal component analysis, we will begin by setting up another recipe specifically for this purpose. With this, we conduct an LDA workflow and model fit. We are tuning the model to find the best number of principal components using k-fold cross validation.
 
@@ -455,7 +452,7 @@ These metrics and graphs reveal how accurately the principal component analysis 
 
 <br>
 
-### Single Decision Tree
+### **Single Decision Tree**
 
 Since a value of about 53% is only moderately accurate, we will try several tree methods to see if the produce more accurate results on the training data set of white wine. First, we will look at the model for a single decision tree.
 
@@ -573,7 +570,7 @@ wdectree_confusionmatrix
 
 From the `ROC` curve, we can see that the decision tree model produces very similar curves for each value of quality, and from the heat map, we can see that the model predicted `5`s and `6`s with the highest accuracy.
 
-### Random Forest
+### **Random Forest**
 
 In hopes of improving our results, we will now look at the random forest model. Here, we set up our model with the engine `ranger` and set the importance to `impurity` to find a set of predictors that best explains the variance in the response variable, and still with a classification approach.
 
@@ -649,9 +646,9 @@ wrandfor_confusionmatrix
 
 <br>
 
-Overall the random forest for the white wine data set has a drastic improvement in terms of the accuracy and roc auc. The variance importance plot reveals that alcohol, volatile acidity and density are most important variables in the data. Every single ROC AUC curve is almost perfect, although as we have learned through the course, this model may be over fitting, and as a result, may not perform as well on the testing data set. This model did the best for predicting wine qualities of `5`, `6`, and `7`.
+Overall the random forest for the white wine data set has a drastic improvement in terms of the accuracy and `roc_auc`. The variance importance plot reveals that alcohol, volatile acidity and density are most important variables in the data. Every single `roc_auc` curve is almost perfect, although as we have learned through the course, this model may be over fitting, and as a result, may not perform as well on the testing data set. This model did the best for predicting wine qualities of `5`, `6`, and `7`.
 
-### Boosted Trees
+### **Boosted Trees**
 
 Finally, let's look at the boosted tree model. We set up our specifications with engine `xgboost` and with a classification approach.
 
@@ -687,6 +684,8 @@ This plot below visualizes the accuracy and `roc_auc` levels for the number of t
 ```{r white boosted tree autoplot}
 wBoostedAutoPlot
 ```
+
+Here, the accuracy and `roc_auc` graphs both spike right before 250 trees.
 
 Now, we collect accuracy metrics to see which model has the highest mean.
 
@@ -724,7 +723,7 @@ wBoostedConfusionMatrix
 
 The accuracy and `roc_auc` for the boosted trees model on the white wine data set is 1, meaning every single observation was correctly classified in the model. This model has the potential to run amazingly on the testing data, although there is undeniable evidence of overfitting.
 
-### Determining Best Fit
+### **Determining Best Fit**
 
 ```{r white best fit1, message=FALSE}
 wbest_roc_table <- rbind(wbest_rocauc[1,c(2,4)], wbest_rocauc1[1,c(4,6)], wbest_rocauc2[1,c(2,4)] ) %>% mutate(model_type = c("Decision Tree", "Random Forest", "Boosted Trees"))
@@ -734,15 +733,11 @@ wbest_roc_table
 
 As we can see, between the three tree based methods we ran, the two with the highest `roc_auc` values were Boosted Trees and Random Forest. From our earlier calculations, linear discriminant analysis using principal component analysis had a higher accuracy than Decision Trees so we will use that as our third model.
 
-To conclude, we will test our data on three models: LDA using PCA, Random Forest and Boosted Trees.
+To conclude, we will test our data on three models: LDA using PCA, Random Forest and Boosted Trees. <br>
 
-### Predicting on the Testing Data
+### **Predicting on the Testing Data**
 
-<br>
-
-Testing the PCA LDA model on the data:
-
-<br>
+#### Testing the PCA LDA model on the data:
 
 ```{r white PCA LDA testing code, eval = FALSE, include = FALSE}
 pcalda_fit_test <- augment(fit_final, new_data = white_test) 
@@ -762,9 +757,7 @@ pcalda_test_confusionmatrix
 
 <br>
 
-Testing the Random Forest model on the data:
-
-<br>
+#### Testing the Random Forest model on the data:
 
 ```{r white random forest testing code, eval = FALSE, include=FALSE}
 wrandfor_pred_test <- augment(wrandfor_fit_final, new_data = white_test) 
@@ -784,9 +777,7 @@ wrandfor_confusionmatrix_test
 
 <br>
 
-Testing the Boosted Trees model on the data:
-
-<br>
+#### Testing the Boosted Trees model on the data:
 
 ```{r white boosted trees testing code, eval = FALSE, include=FALSE}
 wpredictedtest <- augment(wboost_fit_final, new_data = white_test) 
@@ -803,10 +794,9 @@ wBoostedROCCurveTesting
 wBoostedConfusionMatrixTesting
 ```
 
-<br>
-<br>
+<br> <br>
 
-### Conclusion for White Wine Data Set
+### **Conclusion for White Wine Data Set**
 
 In conclusion, the Boosted Trees model did the best on the testing data for the White Wine data set with an accuracy of 65.7% and a roc auc level of 0.82. The Random Forest model is a close second with accuracy 60.8% and a roc auc value of 0.76. LDA did not work very well, and using principal component analysis did not have much of an improvement. We thought that it would due to the fact that many of our predictors had high correlation. Majority of our models do well in predicting values of 5 and 6. Although, in general, we have seen that all of the models thus far do not do as well with 3,4, and 8. This is probably due to the fact that there are not as many observations with this quality level.
 
@@ -816,7 +806,7 @@ In conclusion, the Boosted Trees model did the best on the testing data for the 
 
 Next, let's see how the models perform on the red wine data set. We will be using the same type of models that we used in white wine in order to keep things consistent.
 
-### Recipe
+### **Recipe**
 
 In our recipe for the red wine data set, we also selected for all the predictors, converted character or factored data into numeric binary data, and normalized all predictors.
 
@@ -825,11 +815,11 @@ In our recipe for the red wine data set, we also selected for all the predictors
 red_recipe <- recipe(quality ~ volatile.acidity + fixed.acidity + citric.acid + residual.sugar + chlorides + free.sulfur.dioxide + total.sulfur.dioxide + density + pH + sulphates + alcohol, data = red_train) %>% step_dummy(all_nominal_predictors()) %>% step_normalize(all_predictors())
 ```
 
-### K-Fold Cross Validation
+### **K-Fold Cross Validation**
 
 Let's first explore linear discriminant analysis and naive Bayes classification through k-fold cross validation.
 
-#### Linear Discriminant Analysis
+#### **Linear Discriminant Analysis**
 
 For the linear discriminant analysis model, we use a classification mode and set the engine to `MASS`. We then add the model and recipe to a workflow and create a fit between the workflow and folded data. We are using `roc_auc` to evaluate accuracy.
 
@@ -848,11 +838,11 @@ rlda_fit_cross <- fit_resamples(rlda_wkflow, red_fold)
 collect_metrics(rlda_fit_cross)
 ```
 
-Now, let's take a look at how our cross validation method works with a Naive Bayes model. In particular, let's see if the accuracy increases.
-
 <br>
 
-#### Naive Bayes
+#### **Naive Bayes**
+
+Now, let's take a look at how our cross validation method works with a Naive Bayes model. In particular, let's see if the accuracy increases.
 
 ```{r k-fold naive bayes, message=FALSE, class.source = 'fold-show'}
 #naive bayes model using cross validation
@@ -872,7 +862,7 @@ collect_metrics(rnb_fit_cross)
 
 Through k-fold cross validation, we can see that the linear discriminant analysis model produces a more accurate model than the Naive Bayes model with 60% versus 53% accuracy.
 
-### Principal Component Analysis
+### **Principal Component Analysis**
 
 To conduct principal component analysis, we will begin by setting up another recipe specifically for this purpose. With this, we conduct an LDA workflow and model fit. We are tuning the model to find the best number of principal components using k-fold cross validation.
 
@@ -960,7 +950,7 @@ rpcalda_confusionmatrix
 
 These metrics and graphs reveal how accurately the principal component analysis works on the training data with a linear discriminant analysis model. The `roc_auc` curves are the best for qualities 3 and 8, although overall PCA LDA is still only moderately effective as the accuracy is 61%. Through the confusion matrix, we can see the model predicted `5`s well.
 
-### Single Decision Tree
+### **Single Decision Tree**
 
 Since a value of about 61% is only moderately accurate, we will try several tree methods to see if the produce more accurate results on the training data set of red wine. First, we will look at the model for a single decision tree.
 
@@ -1076,11 +1066,11 @@ augment(rclass_tree_final_fit, new_data = red_test) %>%
 
 This is the overall accuracy measures, `roc_auc` measures, `ROC` curves and confusion matrix that is returned my our decision tree model on the white wine data set. The accuracy is slightly less than the principal component model with linear discriminant analysis that we previously conducted.
 
-### Random Forest
+### **Random Forest**
 
 In hopes of improving our results, we will now look at the random forest model. Here, we set up our model with the engine `ranger` and set the importance to `impurity` to find a set of predictors that best explains the variance in the response variable, and still with a classification approach.
 
-```{r red random forest set up, message=FALSE, eval=FALSE}
+```{r red random forest set up, message=FALSE, eval=FALSE, class.source = 'fold-show'}
 rrandfor <- rand_forest() %>% set_engine("ranger", importance = "impurity") %>% set_mode("classification")
 ```
 
@@ -1134,11 +1124,11 @@ rrandfor_confusionmatrix
 
 Overall the random forest for the red wine data set has a drastic improvement in terms of the accuracy and `roc_auc`. The variance importance plot reveals that alcohol, volatile acidity and sulphates are most important variables in the data for predicting quality. Every single `roc_auc` curve is almost perfect, although as we have learned through the course, this model may be over fitting, and as a result, may not perform as well on the testing data set. This model did the best for predicting wine qualities of `5` and `6`.
 
-### Boosted Tree
+### **Boosted Tree**
 
 Finally, let's look at the boosted tree model. We set up our specifications with engine `xgboost` and with a classification approach.
 
-```{r red boosted tree spec, message=FALSE, eval=FALSE}
+```{r red boosted tree spec, message=FALSE, eval=FALSE, class.source = 'fold-show'}
 rboost_spec <-  boost_tree(tree_depth = 5) %>% 
   set_engine("xgboost") %>% 
   set_mode("classification")
@@ -1173,7 +1163,7 @@ Here we can see that accuracy is highest for 250 to 500 trees, and `roc_auc` spi
 
 Now, we collect accuracy metrics to see which model has the highest mean.
 
-```{r red boosted tree metrics, eval=FALSE}
+```{r red boosted tree metrics, eval=FALSE, class.source = 'fold-show'}
 rbest_rocauc2 <- collect_metrics(rtune_res_boosted) %>% arrange(desc(mean))
 print(rbest_rocauc2)
 
@@ -1195,7 +1185,6 @@ rBoostedConfusionMatrix <- rpredicted %>% conf_mat(truth = quality, estimate = .
 Here are our final results.
 
 ```{r  red boosted tree final visuals}
-rpredicted
 rboosted_acc
 rboosted_rocauc
 rBoostedROCCurve
@@ -1204,7 +1193,9 @@ rBoostedConfusionMatrix
 
 Based on these results, we can see that the boosted tree model also overfitted our red wine data set by our accuracy and `roc_auc` values of 1.
 
-### Determining Best Fit
+<br>
+
+### **Determining Best Fit**
 
 ```{r red best fit, message=FALSE, include = FALSE}
 rbest_rocauc
@@ -1221,9 +1212,11 @@ As we can see, between the three tree based methods we ran, the two with the hig
 
 To conclude, we will test our data on three models: LDA using PCA, Random Forest and Boosted Trees.
 
-### Predicting on the Testing Data
+<br>
 
-Testing the PCA LDA model on the data:
+### **Predicting on the Testing Data**
+
+#### Testing the PCA LDA model on the data:
 
 ```{r PCA LDA testing code, eval=FALSE, include = FALSE}
 rpcalda_fit_test <- augment(rfit_final, new_data = red_test) 
@@ -1241,7 +1234,7 @@ rpcalda_test_roccurve
 rpcalda_test_confusionmatrix
 ```
 
-Testing the Random Forest model on the data:
+#### Testing the Random Forest model on the data:
 
 ```{r random forest testing code, eval = FALSE, include = FALSE}
 rrandfor_pred_test <- augment(wrandfor_fit_final, new_data = white_test) 
@@ -1260,7 +1253,7 @@ rrandfor_roccurve_test
 rrandfor_confusionmatrix_test
 ```
 
-Testing the Boosted Trees model on the data:
+#### Testing the Boosted Trees model on the data:
 
 ```{r boosted tree testing code, eval = FALSE, include = FALSE}
 rpredictedtest <- augment(wboost_fit_final, new_data = white_test) 
@@ -1278,15 +1271,18 @@ rBoostedROCCurveTesting
 rBoostedConfusionMatrixTesting
 ```
 
-<br>
-<br>
+<br> <br>
 
-### Conclusion for Red Wine Data Set
+### **Conclusion for Red Wine Data Set**
 
-MODIFY CONCLUSION FOR RED
-
-In conclusion, the Boosted Trees model did the best on the testing data for the White Wine data set with an accuracy of 67.4% and a roc auc level of 0.77. The Random Forest model is a close second with accuracy 63.2% and a roc auc value of 0.79. LDA did not work very well, and using principal component analysis did not have much of an improvement. We thought that it would due to the fact that many of our predictors had high correlation. Majority of our models do well in predicting values of 5 and 6. Although, in general, we have seen that all of the models thus far do not do as well with 3,4, and 8. This is probably due to the fact that there are not as many observations with this quality level.
+In conclusion, the Boosted Trees model did the best on the testing data for the Red Wine data set with an accuracy of 67.4% and a `roc_auc` level of 0.77. The Random Forest model is a close second with accuracy 63.2% and a `roc_auc` value of 0.79. LDA did not work very well, and using principal component analysis did not have much of an improvement. We thought that it would due to the fact that many of our predictors had high correlation. Majority of our models do well in predicting values of `5` and `6`. Although, in general, we have seen that all of the models thus far do not do as well with `3`, `4`, and `8`. This is probably due to the fact that there are not as many observations with this quality level.
 
 ## **Final Thoughts**
 
-Overall, we have successfully conducted analysis on both the white wine data set and the red wine dataset by constructing 4 models for each wine type and analyzing the results. Generally, tree based models performed the best for predicting the quality of wines given the 11 predictors. For both data sets, the boosted trees model did the best in terms of the accuracy and roc auc. The naive bayes and LDA models with and without PCA did not compare to the tree based methods in terms of these metrics. Although, it is important to note that tree based methods require much more computing power than the other models we looked into. 
+Overall, we have successfully conducted analysis on both the white wine data set and the red wine data set by constructing 4 models for each wine type and analyzing the results. Generally, tree based models performed the best for predicting the quality of wines given the 11 predictors. For both data sets, the boosted trees model did the best in terms of the accuracy and `roc_auc`. The naive Bayes and LDA models with and without PCA did not compare to the tree based methods in terms of these metrics. Although it is important to note that tree based methods require much more computing power than the other models we looked into.
+
+As well as a fruitful exercise in machine learning and data modelling, Maya learned how the quality of white wine generally increases with alcohol content, and red wine is more desirable when it is less acidic. If we were to repeat this supervised machine learning project again, we would want to take into account a greater number of categorical predictors (if available) such as location grown, type of soil, and type of grape. In our code, we would modify our decision tree and boosted tree recipes and models to avoid overfitting the data to the training set. 
+
+<br>
+<br>
+<br>
