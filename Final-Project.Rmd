@@ -134,7 +134,7 @@ white %>%
   select(where(is.numeric)) %>% 
   cor() %>% 
   corrplot(type = 'lower', diag = FALSE, 
-           method = 'color', main = 'White Wine Correlation Plot')
+           method = 'color', mar=c(0,0,2,0), main = 'White Wine Correlation Plot')
 ```
 
 In the white wine correlation matrix, density and residual sugar; and density and alcohol are the predictors with the highest correlation. Total sulfur dioxide and free sulfur dioxide also have a moderate correlation.
@@ -147,7 +147,7 @@ red %>%
   select(where(is.numeric)) %>% 
   cor() %>% 
   corrplot(type = 'lower', diag = FALSE, 
-           method = 'color', main = 'Red Wine Correlation Plot')
+           method = 'color', mar=c(0,0,2,0), main = 'Red Wine Correlation Plot')
 ```
 
 In the red wine correlation matrix, citric acid and fixed acidity; density and fixed acidity; citric acid and volatile acidity; pH and fixed acidity; and free sulfur dioxide and total sulfur dioxide are highly correlated with each other.
@@ -803,6 +803,9 @@ wBoostedROCCurveTesting
 wBoostedConfusionMatrixTesting
 ```
 
+<br>
+<br>
+
 ### Conclusion for White Wine Data Set
 
 In conclusion, the Boosted Trees model did the best on the testing data for the White Wine data set with an accuracy of 65.7% and a roc auc level of 0.82. The Random Forest model is a close second with accuracy 60.8% and a roc auc value of 0.76. LDA did not work very well, and using principal component analysis did not have much of an improvement. We thought that it would due to the fact that many of our predictors had high correlation. Majority of our models do well in predicting values of 5 and 6. Although, in general, we have seen that all of the models thus far do not do as well with 3,4, and 8. This is probably due to the fact that there are not as many observations with this quality level.
@@ -1275,8 +1278,15 @@ rBoostedROCCurveTesting
 rBoostedConfusionMatrixTesting
 ```
 
+<br>
+<br>
+
+### Conclusion for Red Wine Data Set
+
 MODIFY CONCLUSION FOR RED
 
-In conclusion, the Boosted Trees model did the best on the testing data for the White Wine data set with an accuracy of 65.7% and a roc auc level of 0.82. The Random Forest model is a close second with accuracy 60.8% and a roc auc value of 0.76. LDA did not work very well, and using principal component analysis did not have much of an improvement. We thought that it would due to the fact that many of our predictors had high correlation. Majority of our models do well in predicting values of 5 and 6. Although, in general, we have seen that all of the models thus far do not do as well with 3,4, and 8. This is probably due to the fact that there are not as many observations with this quality level.
+In conclusion, the Boosted Trees model did the best on the testing data for the White Wine data set with an accuracy of 67.4% and a roc auc level of 0.77. The Random Forest model is a close second with accuracy 63.2% and a roc auc value of 0.79. LDA did not work very well, and using principal component analysis did not have much of an improvement. We thought that it would due to the fact that many of our predictors had high correlation. Majority of our models do well in predicting values of 5 and 6. Although, in general, we have seen that all of the models thus far do not do as well with 3,4, and 8. This is probably due to the fact that there are not as many observations with this quality level.
 
 ## **Final Thoughts**
+
+Overall, we have successfully conducted analysis on both the white wine data set and the red wine dataset by constructing 4 models for each wine type and analyzing the results. Generally, tree based models performed the best for predicting the quality of wines given the 11 predictors. For both data sets, the boosted trees model did the best in terms of the accuracy and roc auc. The naive bayes and LDA models with and without PCA did not compare to the tree based methods in terms of these metrics. Although, it is important to note that tree based methods require much more computing power than the other models we looked into. 
