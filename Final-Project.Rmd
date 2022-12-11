@@ -53,8 +53,8 @@ We are interested in conducting analysis on both the white and red wine to asses
 This project uses data on the white and red wine, which records information of the chemical makeup of the wine.
 
 ```{r load data, message = FALSE, class.source = 'fold-show'}
-white_og <- read.csv("Wine Dataset/winequality-white.csv", sep = ";")
-red_og <- read.csv("Wine Dataset/winequality-red.csv", sep = ";")
+white_og <- read.csv("wine_dataset/winequality-white.csv", sep = ";")
+red_og <- read.csv("wine_dataset/winequality-red.csv", sep = ";")
 ```
 
 <br>
@@ -276,24 +276,24 @@ We did all of our modeling in R-Scripts for efficiency purposes, since models ge
 
 ```{r loading in model outputs, class.source = 'fold-show'}
 # LDA 
-load("WhiteLDA.rda")
-load("RedLDA.rda")
+load("rda_objects/WhiteLDA.rda")
+load("rda_objects/RedLDA.rda")
 
 # LDA with PCA
-load("WhiteLDAPCA.rda")
-load("RedLDAPCA.rda")
+load("rda_objects/WhiteLDAPCA.rda")
+load("rda_objects/RedLDAPCA.rda")
 
 # Decision Tree
-load("WhiteWineDecisionTree.rda")
-load("RedWineDecisionTree.rda")
+load("rda_objects/WhiteWineDecisionTree.rda")
+load("rda_objects/RedWineDecisionTree.rda")
 
 # Random Forest 
-load("WhiteWineRandomForest.rda")
-load("RedWineRandomForest.rda")
+load("rda_objects/WhiteWineRandomForest.rda")
+load("rda_objects/RedWineRandomForest.rda")
 
 # Boosted Trees
-load("WhiteWineBoostedTrees.rda")
-load("RedWineBoostedTrees.rda")
+load("rda_objects/WhiteWineBoostedTrees.rda")
+load("rda_objects/RedWineBoostedTrees.rda")
 ```
 
 ## **Model Fitting for White Wine**
